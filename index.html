@@ -949,7 +949,11 @@ const PAGES=["login","signup","rating","profile","members","coaches","courts"];
 const AUTHPAGES=["login","signup","rating","profile"];
 const $=id=>document.getElementById(id);
 
+// Anyone can browse. Only your own account pages need a login.
+const ACCOUNT_PAGES=["profile","rating"];
+
 function showPage(name){
+  if(LIVE && !me && ACCOUNT_PAGES.includes(name)) name="login";
   PAGES.forEach(p=>$("page-"+p).classList.toggle("hidden",p!==name));
   document.querySelectorAll("nav.tabs button").forEach(x=>
     x.classList.toggle("on",x.dataset.tab===name));
@@ -958,9 +962,7 @@ function showPage(name){
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>showPage(b.dataset.tab));
 
-$("btnSignup").onclick=()=>showPage("signup");
-$("btnLogin").onclick =()=>showPage("login");
-$("btnRating").onclick=()=>showPage("rating");
+paintAuthState();   // draws the signed-out buttons and binds them
 
 /* ---- log in: username + password only ---- */
 $("loginForm").onsubmit=async e=>{
@@ -1121,10 +1123,35 @@ function paintAuthState(){
     $("btnProfile").onclick=()=>{fillProfileForm();showPage("profile");};
     $("btnRating").onclick=()=>showPage("rating");
     $("btnLogout").onclick=async()=>{
-      await db.auth.signOut(); me=null; liveMembers=null;
-      paintAuthState(); renderAll(); showPage("login");
+      if(LIVE) await db.auth.signOut();
+      me=null; liveMembers=null;
+      resetAfterLogout();
+      paintAuthState();
+      renderAll();
+      showPage("members");   // still browsable, just signed out
     };
+  } else {
+    // Signed out — only log in and sign up are available.
+    box.innerHTML='<button class="chip" id="btnLogin">Log in</button>'
+      +'<button class="chip solid" id="btnSignup">Sign up</button>';
+    $("btnLogin").onclick =()=>showPage("login");
+    $("btnSignup").onclick=()=>showPage("signup");
   }
+}
+
+// Clear anything personal left on screen after signing out.
+function resetAfterLogout(){
+  ["utrStatus","ustaStatus"].forEach(id=>{
+    const el=$(id);
+    if(el){ el.textContent="not submitted"; el.className="tag rate"; }
+  });
+  ["rateMsg","loginMsg","signupMsg","profileMsg"].forEach(id=>{
+    const el=$(id); if(el){ el.textContent=""; el.className="formnote"; }
+  });
+  document.querySelectorAll(".rateForm").forEach(f=>f.reset());
+  const lf=$("loginForm"), sf=$("signupForm"), sl=$("selfLevel");
+  if(lf) lf.reset(); if(sf) sf.reset(); if(sl) sl.value="";
+  myUTR=5.0; $("mylevel").value="5.0";
 }
 
 /* ---- my profile ---- */
@@ -1227,8 +1254,10 @@ async function sendHitRequest(toUserId){
 }
 
 if(LIVE){
-  db.auth.onAuthStateChange(()=>{});
-  loadMe().then(()=>refreshMembers());
+  db.auth.onAuthStateChange(event=>{
+    if(event==="SIGNED_OUT"){ me=null; liveMembers=null; paintAuthState(); renderAll(); showPage("members"); }
+  });
+  loadMe().then(()=>{ if(me) refreshMembers(); });
 }
 
 document.getElementById("market").onchange=e=>{market=e.target.value;renderAll();};
@@ -1255,6 +1284,8 @@ document.addEventListener("click",e=>{
   }
   if(b.dataset.tfilter){ tPublic=!tPublic; b.classList.toggle("on",tPublic); renderCourts(); }
   if(b.dataset.invite){
+    // Browsing is open, but you need an account to contact someone or save a court.
+    if(LIVE && !me) return showPage("login");
     sent[b.dataset.invite]=true;
     if(b.dataset.uid) sendHitRequest(b.dataset.uid);
     renderAll();
