@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HitMeUp — find a hit, find a coach, find a court</title>
+<meta name="author" content="Dominic Anderson">
+<meta name="copyright" content="© 2026 Dominic Anderson. All rights reserved.">
+<meta name="description" content="HitMeUp — connect with tennis players at your level, book coaches, and find the cheapest courts near you.">
+<meta property="og:title" content="HitMeUp">
+<meta property="og:description" content="Find a hit, find a coach, find a court.">
+<meta property="og:type" content="website">
+<style>
+  :root{
+    --cream:#F5F2E6;
+    --cream-2:#EDE9D8;
+    --green:#4E7137;
+    --green-dk:#3B5629;
+    --green-lt:#7FA05F;
+    --ink:#1B1B18;
+    --muted:#6B6A5F;
+    --line:#D6D1BC;
+    --white:#FBFAF3;
+    --radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    line-height:1.55;
+  }
+  a{color:inherit;}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+
+  /* ---------- header ---------- */
+  header{
+    background:var(--cream);
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:50;
+  }
+  .bar{display:flex;align-items:center;gap:16px;padding:12px 0;}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;flex-shrink:0;}
+  .brand .name{
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:700;letter-spacing:2px;font-size:20px;color:var(--ink);
+  }
+  .brand .tag{font-size:11px;color:var(--muted);letter-spacing:.5px;margin-top:-3px;}
+  nav.tabs{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap;}
+  nav.tabs button{
+    font:inherit;font-size:14px;
+    background:transparent;border:1px solid transparent;color:var(--muted);
+    padding:8px 14px;border-radius:999px;cursor:pointer;
+  }
+  nav.tabs button:hover{background:var(--cream-2);color:var(--ink);}
+  nav.tabs button.on{background:var(--green);color:var(--white);border-color:var(--green);}
+
+  /* ---------- context strip ---------- */
+  .ctx{
+    background:var(--cream-2);border-bottom:1px solid var(--line);
+    padding:10px 0;font-size:13px;color:var(--muted);
+  }
+  .ctx .row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .ctx label{display:flex;align-items:center;gap:6px;}
+  select,input[type=search]{
+    font:inherit;font-size:13px;background:var(--white);
+    border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--ink);
+  }
+  .pill-me{
+    margin-left:auto;display:flex;align-items:center;gap:8px;
+    background:var(--white);border:1px solid var(--line);border-radius:999px;
+    padding:4px 12px 4px 4px;font-size:12px;color:var(--ink);
+  }
+  .pill-me .av{
+    width:26px;height:26px;border-radius:50%;background:var(--green);
+    color:var(--white);display:grid;place-items:center;font-size:11px;font-weight:600;
+  }
+
+  /* ---------- page ---------- */
+  main{padding:26px 0 60px;}
+  .page-head{margin-bottom:18px;}
+  .page-head h1{font-size:24px;margin:0 0 4px;font-weight:600;letter-spacing:-.2px;}
+  .page-head p{margin:0;color:var(--muted);font-size:14px;max-width:60ch;}
+
+  .toolbar{
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
+    margin:16px 0 18px;padding-bottom:16px;border-bottom:1px solid var(--line);
+  }
+  .toolbar .grow{flex:1;min-width:180px;}
+  .chip{
+    font:inherit;font-size:13px;cursor:pointer;
+    background:var(--white);border:1px solid var(--line);color:var(--muted);
+    padding:6px 12px;border-radius:999px;
+  }
+  .chip.on{background:var(--green);border-color:var(--green);color:var(--white);}
+  .count{font-size:13px;color:var(--muted);margin-left:auto;}
+
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));}
+  .card{
+    background:var(--white);border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;display:flex;flex-direction:column;gap:10px;
+  }
+  .card h3{margin:0;font-size:16px;font-weight:600;}
+  .card .sub{font-size:13px;color:var(--muted);margin:0;}
+  .row-top{display:flex;gap:12px;align-items:flex-start;}
+  .avatar{
+    width:46px;height:46px;border-radius:50%;flex-shrink:0;
+    background:var(--green);color:var(--white);
+    display:grid;place-items:center;font-weight:600;font-size:15px;
+  }
+  .avatar.alt{background:var(--green-dk);}
+  .meta{display:flex;gap:6px;flex-wrap:wrap;}
+  .tag{
+    font-size:11px;padding:3px 9px;border-radius:999px;
+    background:var(--cream-2);color:var(--green-dk);border:1px solid var(--line);
+  }
+  .tag.rate{background:#E8F0DE;border-color:#C3D6AC;}
+  .tag.free{background:#E4F1E2;border-color:#B6D6B0;color:#2F5B2A;}
+  .tag.warn{background:#F6EEDA;border-color:#E0CFA0;color:#7A5B14;}
+  .tag.fit-great{background:#D8EAC9;border-color:#A2C283;color:#2F5324;}
+  .tag.fit-good{background:#E6EFDA;border-color:#BFD3A5;color:#42603A;}
+  .tag.fit-fair{background:#F3EFE0;border-color:#DAD0B0;color:#6E6440;}
+  .tag.fit-stretch{background:#F6EADF;border-color:#DEBFA3;color:#7A5334;}
+  .tag.court-yes{background:#DDEBD2;border-color:#A9C68F;color:#33562A;}
+  .tag.court-club{background:#E3E9F0;border-color:#B4C4D6;color:#33506E;}
+  .tag.court-no{background:#F2EFE4;border-color:#D6CFB6;color:#6B6450;}
+  .price{font-size:15px;font-weight:600;color:var(--green-dk);}
+  .price small{font-weight:400;color:var(--muted);font-size:12px;}
+  .foot{
+    display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:10px;
+    border-top:1px solid var(--line);
+  }
+  button.act{
+    font:inherit;font-size:13px;cursor:pointer;
+    background:var(--green);color:var(--white);border:1px solid var(--green);
+    padding:7px 14px;border-radius:8px;
+  }
+  button.act:hover{background:var(--green-dk);border-color:var(--green-dk);}
+  button.act.ghost{background:transparent;color:var(--green-dk);border-color:var(--line);}
+  button.act.ghost:hover{background:var(--cream-2);}
+  button.act.done{background:var(--cream-2);color:var(--muted);border-color:var(--line);cursor:default;}
+  a.act.book{text-decoration:none;display:inline-block;}
+  .nobook{
+    font-size:12px;color:var(--muted);font-style:italic;
+    padding:7px 0;
+  }
+  .src{font-size:11px;color:var(--muted);margin-left:auto;text-align:right;}
+
+  .empty{
+    grid-column:1/-1;text-align:center;color:var(--muted);
+    padding:50px 20px;border:1px dashed var(--line);border-radius:var(--radius);font-size:14px;
+  }
+  .note{
+    margin-top:22px;font-size:12px;color:var(--muted);
+    background:var(--cream-2);border:1px solid var(--line);
+    border-radius:var(--radius);padding:12px 14px;
+  }
+  .note strong{color:var(--ink);font-weight:600;}
+  .hidden{display:none;}
+  .site-foot{
+    border-top:1px solid var(--line);background:var(--cream-2);
+    padding:16px 0;font-size:12px;color:var(--muted);
+  }
+  .site-foot .wrap{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .site-foot .proto{margin-left:auto;}
+
+  /* ---------- auth ---------- */
+  .auth{display:flex;gap:8px;flex-shrink:0;}
+  .chip.solid{background:var(--green);border-color:var(--green);color:var(--white);}
+  .chip.solid:hover{background:var(--green-dk);border-color:var(--green-dk);}
+  .auth-wrap{
+    display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;
+    align-items:start;margin-top:10px;
+  }
+  .auth-card{
+    background:var(--white);border:1px solid var(--line);
+    border-radius:var(--radius);padding:22px;
+  }
+  .auth-wrap.narrow{grid-template-columns:minmax(0,460px);justify-content:center;}
+  .rating-opts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px;}
+  .rate-card{
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px;background:var(--cream-2);
+  }
+  .rate-head{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .rate-head h3{margin:0;font-size:15px;font-weight:600;}
+  .rate-card .sub{margin:0 0 12px;}
+  .rate-card .fld{margin-bottom:10px;}
+  .rate-card .act.wide{margin-top:4px;padding:9px;font-size:14px;}
+  .rate-foot{
+    display:flex;align-items:center;gap:14px;margin-top:20px;
+    padding-top:16px;border-top:1px solid var(--line);
+  }
+  .fallback{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;}
+  .fallback summary{
+    font-size:12.5px;color:var(--green-dk);cursor:pointer;
+    text-decoration:underline;list-style:none;
+  }
+  .fallback summary::-webkit-details-marker{display:none;}
+  .fallback .hint{margin-top:8px;}
+  .tiers{
+    margin-top:20px;padding-top:16px;border-top:1px solid var(--line);
+  }
+  .tiers h4{margin:0 0 10px;font-size:13px;font-weight:600;}
+  .tiers ul{margin:0;padding:0;list-style:none;font-size:12.5px;color:var(--muted);}
+  .tiers li{margin-bottom:8px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;}
+  .tiers li .tag{flex-shrink:0;}
+  @media(max-width:700px){ .rating-opts{grid-template-columns:1fr;} }
+  .auth-card h2{font-size:20px;margin:0 0 4px;font-weight:600;}
+  .auth-card .sub{font-size:13px;color:var(--muted);margin:0 0 18px;}
+  .fields{display:flex;flex-direction:column;gap:14px;}
+  .fld{display:flex;flex-direction:column;gap:5px;}
+  .fld > span{font-size:13px;font-weight:600;}
+  .fld input,.fld select{
+    font:inherit;font-size:14px;background:var(--white);
+    border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--ink);width:100%;
+  }
+  .fld input:focus,.fld select:focus{outline:2px solid var(--green-lt);outline-offset:1px;}
+  .utr-box{
+    border:1px solid var(--line);border-radius:8px;
+    padding:12px;background:var(--cream-2);
+  }
+  .utr-link{
+    font:inherit;font-size:13px;cursor:pointer;width:100%;
+    background:var(--green-dk);color:var(--white);border:1px solid var(--green-dk);
+    padding:9px 12px;border-radius:8px;
+  }
+  .utr-link.linked{background:#DDEBD2;color:#33562A;border-color:#A9C68F;cursor:default;}
+  .utr-box .hint{font-size:11.5px;color:var(--muted);margin:7px 0 0;}
+  .utr-box .or{
+    text-align:center;font-size:11px;color:var(--muted);
+    margin:10px 0 8px;text-transform:uppercase;letter-spacing:1px;
+  }
+  .check{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--muted);}
+  .check input{margin-top:3px;}
+  .act.wide{width:100%;margin-top:18px;padding:11px;font-size:15px;}
+  .formnote{font-size:13px;margin:10px 0 0;min-height:18px;}
+  .formnote.err{color:#9A3B21;}
+  .formnote.ok{color:#2F5B2A;}
+  .alt-line{font-size:13px;color:var(--muted);margin:16px 0 0;text-align:center;}
+  .linkbtn{
+    font:inherit;font-size:13px;background:none;border:none;padding:0;
+    color:var(--green-dk);text-decoration:underline;cursor:pointer;
+  }
+  .auth-side{
+    background:var(--cream-2);border:1px solid var(--line);
+    border-radius:var(--radius);padding:20px;
+  }
+  .auth-side h3{margin:0 0 12px;font-size:15px;font-weight:600;}
+  .auth-side ul{margin:0;padding-left:18px;font-size:13px;color:var(--muted);}
+  .auth-side li{margin-bottom:11px;}
+  .auth-side li strong{color:var(--ink);font-weight:600;}
+  .auth-side .fineprint{
+    font-size:11.5px;color:var(--muted);margin:16px 0 0;
+    padding-top:12px;border-top:1px solid var(--line);
+  }
+
+  @media(max-width:820px){ .auth-wrap{grid-template-columns:1fr;} }
+  @media(max-width:640px){
+    .bar{flex-wrap:wrap;}
+    nav.tabs{margin-left:0;order:3;width:100%;}
+    nav.tabs button{flex:1;}
+    .auth{margin-left:auto;}
+    .brand .name{font-size:18px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#">
+      <svg width="46" height="46" viewBox="0 0 680 680" aria-label="HitMeUp logo">
+        <circle cx="340" cy="340" r="326" fill="#F5F2E6"/>
+        <circle cx="340" cy="340" r="326" fill="none" stroke="#4E7137" stroke-width="26"/>
+        <circle cx="340" cy="340" r="288" fill="none" stroke="#4E7137" stroke-width="6"/>
+        <g stroke="#1B1B18" stroke-width="4" fill="none">
+          <rect x="150" y="120" width="380" height="440"/>
+          <line x1="150" y1="255" x2="530" y2="255"/>
+          <line x1="150" y1="425" x2="530" y2="425"/>
+          <line x1="215" y1="120" x2="215" y2="560"/>
+          <line x1="465" y1="120" x2="465" y2="560"/>
+          <line x1="340" y1="255" x2="340" y2="425"/>
+          <line x1="340" y1="120" x2="340" y2="150"/>
+          <line x1="340" y1="530" x2="340" y2="560"/>
+        </g>
+        <g stroke="#4E7137" stroke-width="15" fill="none" stroke-linecap="round">
+          <g transform="translate(340,330) rotate(-24)">
+            <ellipse cx="0" cy="-150" rx="112" ry="140"/>
+            <path d="M-52,-20 C -46,30 -22,58 0,72 C 22,58 46,30 52,-20"/>
+            <line x1="0" y1="72" x2="0" y2="235"/>
+          </g>
+          <g transform="translate(340,330) rotate(24)">
+            <ellipse cx="0" cy="-150" rx="112" ry="140"/>
+            <path d="M-52,-20 C -46,30 -22,58 0,72 C 22,58 46,30 52,-20"/>
+            <line x1="0" y1="72" x2="0" y2="235"/>
+          </g>
+        </g>
+        <circle cx="340" cy="88" r="26" fill="#4E7137"/>
+      </svg>
+      <span>
+        <div class="name">HITMEUP</div>
+        <div class="tag">find a hit · find a coach · find a court</div>
+      </span>
+    </a>
+    <nav class="tabs">
+      <button class="on" data-tab="members">Members</button>
+      <button data-tab="coaches">Coaches</button>
+      <button data-tab="courts">Nearby courts</button>
+    </nav>
+    <div class="auth" id="authBtns">
+      <button class="chip" id="btnRating">Link rating</button>
+      <button class="chip" id="btnLogin">Log in</button>
+      <button class="chip solid" id="btnSignup">Sign up</button>
+    </div>
+  </div>
+</header>
+
+<div class="ctx">
+  <div class="wrap row">
+    <label>Area
+      <select id="market">
+        <option value="NYC">New York City</option>
+        <option value="LI">Long Island</option>
+        <option value="HAM">The Hamptons</option>
+      </select>
+    </label>
+    <label>My level
+      <select id="mylevel">
+        <option value="1.5">UTR 1&ndash;2 &mdash; brand new</option>
+        <option value="3.0">UTR 3 &mdash; beginner</option>
+        <option value="4.0">UTR 4 &mdash; improver</option>
+        <option value="5.0" selected>UTR 5 &mdash; solid rally</option>
+        <option value="6.0">UTR 6 &mdash; strong club</option>
+        <option value="7.0">UTR 7 &mdash; competitive</option>
+        <option value="8.0">UTR 8 &mdash; advanced</option>
+        <option value="9.0">UTR 9 &mdash; open level</option>
+      </select>
+    </label>
+    <span class="pill-me"><span class="av">DA</span> Dominic A. · verified via UTR</span>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- ============ LOG IN ============ -->
+  <section id="page-login" class="hidden">
+    <div class="auth-wrap narrow">
+      <div class="auth-card">
+        <form id="loginForm" novalidate>
+          <h2>Log in</h2>
+          <p class="sub">Welcome back.</p>
+          <div class="fields">
+            <label class="fld">
+              <span>Username</span>
+              <input type="text" name="username" placeholder="yourusername" autocomplete="username">
+            </label>
+            <label class="fld">
+              <span>Password</span>
+              <input type="password" name="password" placeholder="Your password" autocomplete="current-password">
+            </label>
+          </div>
+          <button type="submit" class="act wide">Log in</button>
+          <p class="formnote" id="loginMsg"></p>
+          <p class="alt-line">
+            New to HitMeUp?
+            <button type="button" class="linkbtn" data-go="signup">Create an account</button>
+          </p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SIGN UP ============ -->
+  <section id="page-signup" class="hidden">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <form id="signupForm" novalidate>
+          <h2>Create your account</h2>
+          <p class="sub">Find a hitting partner at your level, book a coach, and see the cheapest courts near you.</p>
+
+          <div class="fields">
+            <label class="fld">
+              <span>Full name</span>
+              <input type="text" name="name" placeholder="Jane Doe" autocomplete="name">
+            </label>
+            <label class="fld">
+              <span>Username</span>
+              <input type="text" name="username" placeholder="Pick a username" autocomplete="username">
+            </label>
+            <label class="fld">
+              <span>Email</span>
+              <input type="email" name="email" placeholder="you@example.com" autocomplete="email">
+            </label>
+            <label class="fld">
+              <span>Password</span>
+              <input type="password" name="password" placeholder="At least 8 characters" autocomplete="new-password">
+            </label>
+            <label class="fld">
+              <span>Where do you play?</span>
+              <select name="area">
+                <option value="NYC">New York City</option>
+                <option value="LI">Long Island</option>
+                <option value="HAM">The Hamptons</option>
+              </select>
+            </label>
+            <label class="fld">
+              <span>Court access</span>
+              <select name="court">
+                <option value="public">I&rsquo;m looking for a court</option>
+                <option value="club">I&rsquo;m a club member</option>
+                <option value="private">I have my own court</option>
+              </select>
+            </label>
+            <label class="check">
+              <input type="checkbox" name="terms">
+              <span>I agree to the terms and privacy policy.</span>
+            </label>
+          </div>
+
+          <button type="submit" class="act wide">Create account</button>
+          <p class="formnote" id="signupMsg"></p>
+          <p class="alt-line">
+            Already have an account?
+            <button type="button" class="linkbtn" data-go="login">Log in</button>
+          </p>
+        </form>
+      </div>
+
+      <aside class="auth-side">
+        <h3>Why sign up</h3>
+        <ul>
+          <li><strong>Matched by real rating.</strong> Link a UTR or USTA rating and get partners close to your level.</li>
+          <li><strong>Cheapest court, first.</strong> Public permits, club walk-on rates and season memberships in one sorted list.</li>
+          <li><strong>Coaches who come to you.</strong> Club pros and at-home coaches with public rates.</li>
+        </ul>
+        <p class="fineprint">You&rsquo;ll be asked to link your rating next &mdash; it&rsquo;s optional, and you can do it any time.</p>
+        <p class="fineprint">Prototype only &mdash; nothing you type here is sent anywhere or stored.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ LINK RATING ============ -->
+  <section id="page-rating" class="hidden">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <h2>Verify your rating</h2>
+        <p class="sub">Paste a link to your public rating profile and someone on our team will check it within 24 hours. A checked rating means partners know your level is real.</p>
+
+        <div class="rating-opts">
+          <div class="rate-card" id="cardUTR">
+            <div class="rate-head">
+              <h3>UTR</h3>
+              <span class="tag rate" id="utrStatus">not submitted</span>
+            </div>
+            <p class="sub">Universal Tennis Rating, on the 1.00&ndash;16.50 scale.</p>
+            <form class="rateForm" data-kind="utr" novalidate>
+              <label class="fld">
+                <span>Link to your UTR profile</span>
+                <input type="url" name="profile" placeholder="https://app.utrsports.net/profiles/…">
+              </label>
+              <label class="fld">
+                <span>Your UTR</span>
+                <input type="number" name="rating" step="0.01" min="1" max="16.5" placeholder="e.g. 5.24">
+              </label>
+              <button type="submit" class="act wide">Submit for review</button>
+              <details class="fallback">
+                <summary>No public profile link?</summary>
+                <p class="hint">No problem &mdash; plenty of players don&rsquo;t have one. Set your level with the self-assessment on the right instead. You&rsquo;ll show as self-rated, and you can come back and get it checked any time.</p>
+              </details>
+            </form>
+          </div>
+
+          <div class="rate-card" id="cardUSTA">
+            <div class="rate-head">
+              <h3>USTA / NTRP</h3>
+              <span class="tag rate" id="ustaStatus">not submitted</span>
+            </div>
+            <p class="sub">Your NTRP rating from USTA league play, on the 1.5&ndash;7.0 scale.</p>
+            <form class="rateForm" data-kind="usta" novalidate>
+              <label class="fld">
+                <span>Link to your USTA player profile</span>
+                <input type="url" name="profile" placeholder="https://www.usta.com/…">
+              </label>
+              <label class="fld">
+                <span>NTRP rating</span>
+                <select name="rating">
+                  <option value="">Select your rating</option>
+                  <option value="2.5">2.5</option>
+                  <option value="3.0">3.0</option>
+                  <option value="3.5">3.5</option>
+                  <option value="4.0">4.0</option>
+                  <option value="4.5">4.5</option>
+                  <option value="5.0">5.0</option>
+                  <option value="5.5">5.5+</option>
+                </select>
+              </label>
+              <button type="submit" class="act wide">Submit for review</button>
+              <details class="fallback">
+                <summary>No public profile link?</summary>
+                <p class="hint">No problem &mdash; plenty of players don&rsquo;t have one. Set your level with the self-assessment on the right instead. You&rsquo;ll show as self-rated, and you can come back and get it checked any time.</p>
+              </details>
+            </form>
+          </div>
+        </div>
+
+        <div class="tiers">
+          <h4>How ratings are shown to other players</h4>
+          <ul>
+            <li><span class="tag court-yes">profile checked</span> confirmed by our team against your public UTR or USTA profile. Re-checked every month, since ratings change.</li>
+            <li><span class="tag warn">pending review</span> submitted and reviewed within 24 hours. You show as self-rated until it clears.</li>
+            <li><span class="tag court-no">self-rated</span> your own estimate. Perfectly fine, and you can get it checked whenever you like.</li>
+          </ul>
+        </div>
+
+        <p class="formnote" id="rateMsg"></p>
+
+        <div class="rate-foot">
+          <button type="button" class="act" data-go="members">Done</button>
+          <button type="button" class="linkbtn" data-go="members">Skip for now</button>
+        </div>
+      </div>
+
+      <aside class="auth-side">
+        <h3>No rating yet?</h3>
+        <p class="sub">Plenty of players don&rsquo;t have one. Skip this and pick a level that sounds like you &mdash; it can be replaced with a verified rating later.</p>
+        <label class="fld">
+          <span>Estimate my level</span>
+          <select id="selfLevel">
+            <option value="">Choose one</option>
+            <option value="1.5">Brand new to tennis</option>
+            <option value="3.0">Beginner &mdash; learning to rally</option>
+            <option value="4.0">Improver &mdash; can hold a rally</option>
+            <option value="5.0">Solid club player</option>
+            <option value="7.0">Competitive / league player</option>
+            <option value="8.0">Advanced / former college</option>
+          </select>
+        </label>
+        <p class="fineprint">You can get your rating checked later whenever you like.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ MEMBERS ============ -->
+  <section id="page-members">
+    <div class="page-head">
+      <h1>Members near you</h1>
+      <p>Players in your area looking for a hit. Ratings shown are pulled from a linked UTR account, so the level you see is the level you get.</p>
+    </div>
+    <div class="toolbar">
+      <input type="search" class="grow" id="mSearch" placeholder="Search by name or neighborhood…">
+      <button class="chip on" data-mfilter="all">Everyone</button>
+      <button class="chip" data-mfilter="near">Within 0.5 of my UTR</button>
+      <button class="chip" data-mfilter="today">Free today</button>
+      <button class="chip" data-mfilter="court">Has a court</button>
+      <span class="count" id="mCount"></span>
+    </div>
+    <div class="grid" id="mGrid"></div>
+    <div class="note"><strong>Prototype note.</strong> Member profiles here are sample data. In the real product these would be users who signed up and linked a UTR account — never scraped or cold-contacted.</div>
+  </section>
+
+  <!-- ============ COACHES ============ -->
+  <section id="page-coaches" class="hidden">
+    <div class="page-head">
+      <h1>Coaches near you</h1>
+      <p>Book a lesson at a club, a public court, or your own court. Rates shown are published rates where a coach lists one publicly.</p>
+    </div>
+    <div class="toolbar">
+      <input type="search" class="grow" id="cSearch" placeholder="Search coaches…">
+      <button class="chip on" data-cfilter="all">All</button>
+      <button class="chip" data-cfilter="club">At a club</button>
+      <button class="chip" data-cfilter="home">Comes to you</button>
+      <button class="chip" data-csort="price">Cheapest first</button>
+      <span class="count" id="cCount"></span>
+    </div>
+    <div class="grid" id="cGrid"></div>
+    <div class="note"><strong>Prototype note.</strong> Coach names are placeholders. Venues, rates and the <em>on request</em> pricing model come from our market research &mdash; concierge coaches genuinely quote per client rather than publishing an hourly rate.</div>
+  </section>
+
+  <!-- ============ COURTS ============ -->
+  <section id="page-courts" class="hidden">
+    <div class="page-head">
+      <h1>Nearby courts</h1>
+      <p>Cheapest and closest places to play. Public courts, club courts, and pay-as-you-go rentals in one list.</p>
+    </div>
+    <div class="toolbar">
+      <input type="search" class="grow" id="tSearch" placeholder="Search courts and clubs…">
+      <button class="chip on" data-tsort="price">Cheapest first</button>
+      <button class="chip" data-tsort="dist">Closest first</button>
+      <button class="chip" data-tfilter="public">Public only</button>
+      <span class="count" id="tCount"></span>
+    </div>
+    <div class="grid" id="tGrid"></div>
+    <div class="note"><strong>Prototype note.</strong> Pricing and court counts come from our NYC / Long Island / Hamptons research and are sourced per venue. Booking links go to the venue's own permit or reservation page &mdash; venues with no online booking say so rather than sending you to a dead end. Distances are placeholder values for the demo.</div>
+  </section>
+
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>&copy; 2026 Dominic Anderson &middot; HitMeUp</span>
+    <span class="proto">Prototype &mdash; sample member data; court and coach data sourced.</span>
+  </div>
+</footer>
+
+<script>
+const MEMBERS = {
+  NYC:[
+    {n:"Marcus Webb",i:"MW",u:5.2,loc:"Upper West Side",d:0.6,pref:"Baseline rallies, no scoring",avail:"Weekday mornings",today:true,court:"public"},
+    {n:"Priya Raman",i:"PR",u:4.8,loc:"Chelsea",d:1.1,pref:"Sets, competitive",avail:"Evenings after 6",today:true,court:"public"},
+    {n:"Danny Ortiz",i:"DO",u:5.1,loc:"Astoria",d:2.4,pref:"Drills then a set",avail:"Weekends",today:false,court:"club"},
+    {n:"Alice Chen",i:"AC",u:6.4,loc:"Brooklyn Heights",d:3.2,pref:"Hard hitting, singles",avail:"Sat & Sun AM",today:false,court:"public"},
+    {n:"Tom Feeney",i:"TF",u:3.9,loc:"Hell's Kitchen",d:0.9,pref:"Casual, still learning",avail:"Flexible",today:true,court:"public"},
+    {n:"Sonia Alvarez",i:"SA",u:5,loc:"Harlem",d:2.8,pref:"Doubles, looking for a 4th",avail:"Weekday evenings",today:false,court:"club"},
+    {n:"Ben Whitfield",i:"BW",u:7.6,loc:"Financial District",d:4.1,pref:"Match play only",avail:"Early mornings",today:false,court:"public"},
+    {n:"Nina Kowalski",i:"NK",u:4.9,loc:"Williamsburg",d:3.6,pref:"Rally + serve practice",avail:"Weekends",today:true,court:"private"},
+    {n:"Ellie Fournier",i:"EF",u:1.4,loc:"Murray Hill",d:1.3,pref:"Total beginner, first racquet",avail:"Weekend mornings",today:true,court:"public"},
+    {n:"Omar Haddad",i:"OH",u:2.1,loc:"Inwood",d:5.2,pref:"Learning to rally, very patient needed",avail:"Weeknights",today:false,court:"club"},
+    {n:"Grace Whitmore",i:"GW",u:2.6,loc:"Park Slope",d:3.9,pref:"Beginner drills, no scoring yet",avail:"Sat AM",today:true,court:"public"},
+    {n:"Luis Fernández",i:"LF",u:3.2,loc:"Sunnyside",d:2.6,pref:"Improver, working on consistency",avail:"Flexible",today:false,court:"public"},
+    {n:"Kiara Blackwood",i:"KB",u:3.7,loc:"Bushwick",d:4.3,pref:"Casual sets, still learning",avail:"Weekends",today:true,court:"club"},
+    {n:"Peter Mihailov",i:"PM",u:4.3,loc:"Tribeca",d:2,pref:"Steady baseline, no big serves",avail:"Weekday lunch",today:false,court:"public"},
+    {n:"Rachel Osei",i:"RO",u:4.6,loc:"Crown Heights",d:4.7,pref:"Doubles or singles, easygoing",avail:"Sun afternoons",today:true,court:"public"},
+    {n:"Julian Reyes",i:"JU",u:5.5,loc:"East Village",d:1.6,pref:"Fast-paced rallies, tiebreaks",avail:"Weeknights",today:false,court:"club"},
+    {n:"Amara Nkemelu",i:"AN",u:5.9,loc:"Long Island City",d:3.1,pref:"Singles, competitive but friendly",avail:"Early mornings",today:true,court:"public"},
+    {n:"Simon Bright",i:"SB",u:6.2,loc:"Battery Park City",d:3.8,pref:"Match play, USTA 4.0 level",avail:"Weekends",today:false,court:"private"},
+    {n:"Hana Yoshida",i:"HY",u:6.7,loc:"Greenpoint",d:4,pref:"Serve & volley practice",avail:"Weekday evenings",today:true,court:"club"},
+    {n:"Dmitri Volkov",i:"DV",u:7.1,loc:"Riverdale",d:6.9,pref:"Hard hitting, best of 3",avail:"Sat mornings",today:false,court:"public"},
+    {n:"Chloe Bertrand",i:"CB",u:8,loc:"Forest Hills",d:7.4,pref:"Former college player, match play",avail:"Weekday mornings",today:true,court:"public"},
+    {n:"Ibrahim Sallah",i:"IS",u:8.6,loc:"Jackson Heights",d:5.6,pref:"High intensity, tournament prep",avail:"Early AM only",today:false,court:"club"},
+    {n:"Whitney Gale",i:"WG",u:9,loc:"Upper East Side",d:2.3,pref:"Open level, looking for a regular",avail:"Flexible",today:true,court:"private"}
+  ],
+  LI:[
+    {n:"Greg Santoro",i:"GS",u:5.3,loc:"Garden City",d:1.4,pref:"Singles, best of 3",avail:"Weekday evenings",today:true,court:"club"},
+    {n:"Marie Delaney",i:"MD",u:4.7,loc:"Huntington",d:2.2,pref:"Social doubles",avail:"Weekday mornings",today:false,court:"public"},
+    {n:"Rob Klein",i:"RK",u:5,loc:"Port Washington",d:3,pref:"Drills, high intensity",avail:"Sat AM",today:true,court:"club"},
+    {n:"Ana Lucia Reis",i:"AR",u:6.1,loc:"Great Neck",d:2.7,pref:"Match play, USTA 4.0",avail:"Sun afternoons",today:false,court:"private"},
+    {n:"Ted Nakamura",i:"TN",u:4.2,loc:"Rockville Centre",d:4.4,pref:"Improver, patient partner",avail:"Flexible",today:true,court:"public"},
+    {n:"Hannah Boyle",i:"HB",u:5.4,loc:"Oceanside",d:5.1,pref:"Baseline rallies",avail:"Weeknights",today:false,court:"club"},
+    {n:"Denise Corrigan",i:"DC",u:1.8,loc:"Levittown",d:6.2,pref:"Just started, learning grips",avail:"Weekday mornings",today:true,court:"public"},
+    {n:"Sam Petrosyan",i:"SP",u:2.4,loc:"Massapequa",d:7.1,pref:"Beginner, wants a hitting buddy",avail:"Weekends",today:false,court:"private"},
+    {n:"Farrah Idris",i:"FI",u:3,loc:"Syosset",d:3.3,pref:"Improver, mini-tennis and rallies",avail:"Sat AM",today:true,court:"club"},
+    {n:"Michael Dunne",i:"MI",u:3.6,loc:"Bethpage",d:4.9,pref:"Social hit, no pressure",avail:"Sun mornings",today:false,court:"public"},
+    {n:"Lena Brackmann",i:"LB",u:4.4,loc:"Manhasset",d:2.5,pref:"Consistent rallies, some doubles",avail:"Weekday evenings",today:true,court:"club"},
+    {n:"Curtis Nyland",i:"CN",u:5.8,loc:"Smithtown",d:8.3,pref:"Competitive singles",avail:"Weeknights",today:false,court:"private"},
+    {n:"Priscilla Achebe",i:"PA",u:6.5,loc:"Northport",d:6.6,pref:"Match play, USTA league",avail:"Weekends",today:true,court:"public"},
+    {n:"Aaron Feldstein",i:"AF",u:7.3,loc:"Dix Hills",d:7.8,pref:"Drills then sets, high pace",avail:"Early mornings",today:false,court:"club"},
+    {n:"Yuki Tanabe",i:"YT",u:8.4,loc:"Melville",d:6,pref:"Former D1, tournament prep",avail:"Sat & Sun AM",today:true,court:"private"}
+  ],
+  HAM:[
+    {n:"Charles Ellery",i:"CE",u:5.1,loc:"East Hampton",d:1.2,pref:"Mornings before the heat",avail:"Summer weekdays",today:true,court:"private"},
+    {n:"Vanessa Cole",i:"VC",u:4.9,loc:"Sag Harbor",d:2.6,pref:"Doubles at a private court",avail:"Weekends",today:true,court:"private"},
+    {n:"Jonah Reyes",i:"JR",u:6.8,loc:"Bridgehampton",d:3.4,pref:"Competitive singles",avail:"Early AM",today:false,court:"club"},
+    {n:"Pippa Lindqvist",i:"PL",u:5.2,loc:"Southampton",d:4,pref:"Rally, then a light set",avail:"Weekday afternoons",today:false,court:"private"},
+    {n:"Owen Marsh",i:"OM",u:4.4,loc:"Amagansett",d:5.5,pref:"Casual hit, guest of a member",avail:"Aug only",today:true,court:"public"},
+    {n:"Bitsy Kellerman",i:"BK",u:1.2,loc:"Water Mill",d:3.8,pref:"Complete beginner, private court",avail:"Weekday mornings",today:true,court:"private"},
+    {n:"Rafael Duarte",i:"RD",u:2.8,loc:"Hampton Bays",d:9.4,pref:"Learning, happy to feed and rally",avail:"Weekends",today:false,court:"club"},
+    {n:"Margot Sinclair",i:"MS",u:3.4,loc:"Wainscott",d:2.9,pref:"Improver, social doubles",avail:"Summer weekdays",today:true,court:"private"},
+    {n:"Nikhil Varma",i:"NV",u:4.1,loc:"Quogue",d:11.2,pref:"Steady rallies, mornings",avail:"Weekends",today:false,court:"public"},
+    {n:"Serena Bloomfield",i:"SB",u:5.7,loc:"Sagaponack",d:4.6,pref:"Doubles at my own court",avail:"Weekday afternoons",today:true,court:"private"},
+    {n:"Gustav Lindholm",i:"GL",u:6.3,loc:"Shelter Island",d:12.5,pref:"Singles, ferry-friendly times",avail:"Sun mornings",today:false,court:"private"},
+    {n:"Theo Marchetti",i:"TM",u:7.9,loc:"Springs",d:2.2,pref:"Match play, fast pace",avail:"Early AM",today:true,court:"club"},
+    {n:"Delphine Aubert",i:"DA2",u:8.8,loc:"Montauk",d:10.1,pref:"Open level, tournament regular",avail:"Aug weekends",today:false,court:"private"}
+  ]
+};
+
+const COACHES = {
+  NYC:[
+    {n:"Cecil Lingard",i:"CL",rate:170,where:"club",loc:"Central Park Tennis Center",spec:"Head pro · all levels, clay & hard",src:"rate: centralparktenniscenter.com"},
+    {n:"Mariano Argote",i:"MA",rate:180,where:"club",loc:"Central Park Tennis Center",spec:"Master pro · advanced / match prep",src:"rate: centralparktenniscenter.com"},
+    {n:"Julie Razafindranaly",i:"JR",rate:60,where:"club",loc:"Cary Leeds Center, Bronx",spec:"Juniors & beginners · first lesson free",src:"rate: nyjtl.org"},
+    {n:"Valentin Lang",i:"VL",rate:50,where:"club",loc:"Yorkville Tennis Club, UES",spec:"Indoor clay, all levels",src:"rate: via TeachMe.To"},
+    {n:"Victor Barrere",i:"VB",rate:60,where:"home",loc:"Brooklyn-wide",spec:"Independent pro · travels to your court",src:"rate: findtennislessons.com"},
+    {n:"David Cerne",i:"DC",rate:108,where:"home",loc:"Manhattan-wide",spec:"Independent pro · comes to you",src:"rate: TeachMe.To Manhattan avg"}
+  ],
+  LI:[
+    {n:"Tim Andersson",i:"TA",rate:213,where:"club",loc:"SPORTIME Port Washington",spec:"Academy-level · McEnroe program",src:"rate: via TeachMe.To"},
+    {n:"Cecil Lingard",i:"CL",rate:null,where:"club",loc:"Glen Cove & Glen Head",spec:"Leagues & junior development",src:"venue: rwtt.com"},
+    {n:"Mariano Argote",i:"MA",rate:null,where:"club",loc:"Bethpage Park, Farmingdale",spec:"Junior high performance",src:"venue: LI Tennis Magazine"},
+    {n:"Julie Razafindranaly",i:"JR",rate:null,where:"club",loc:"Huntington",spec:"Academy coaching & camps",src:"venue: longislandtennis.org"},
+    {n:"Valentin Lang",i:"VL",rate:55,where:"home",loc:"Nassau & Suffolk",spec:"Independent pro · comes to you",src:"rate: marketplace avg"}
+  ],
+  HAM:[
+    {n:"Victor Barrere",i:"VB",rate:150,where:"home",loc:"Hamptons-wide",spec:"Private lessons at your own court",src:"rate: tenniswithdennis.com"},
+    {n:"David Cerne",i:"DC",rate:115,where:"club",loc:"Hamptons-wide",spec:"Indoor · 10-lesson packs at $110/hr",src:"rate: cunninghamtennis.com"},
+    {n:"Tim Andersson",i:"TA",rate:140,where:"home",loc:"Westhampton / East Hampton",spec:"Independent pro",src:"rate: superprof.com"},
+    {n:"Cecil Lingard",i:"CL",rate:null,where:"home",loc:"Montauk to Westhampton",spec:"Concierge · 45+ yrs coaching",src:"model: myhamptonspro.com"},
+    {n:"Mariano Argote",i:"MA",rate:null,where:"home",loc:"Hamptons-wide",spec:"ATP/WTA & D1 background",src:"model: theroyaltennis.com"},
+    {n:"Julie Razafindranaly",i:"JR",rate:null,where:"home",loc:"Hamptons-wide",spec:"USPTA-certified · in-home",src:"model: hamptonstennisconcierge.com"},
+    {n:"Valentin Lang",i:"VL",rate:null,where:"club",loc:"Montauk",spec:"8 clay courts, open to the public",src:"venue: gothamtennismtk.com"}
+  ]
+};
+
+const COURTS = {
+  NYC:[
+    {n:"NYC Parks public courts",i:"NP",price:0,unit:"with $100 season permit",type:"public",loc:"~90+ locations citywide",d:0.4,detail:"Season permit $100 adult, $20 senior, $10 junior. Single play $15.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
+    {n:"Central Park Tennis Center",i:"CP",price:15,unit:"per hour",type:"public",loc:"Central Park",d:1.2,detail:"30 courts (26 clay, 4 hard). Advance booking for permit holders.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/tennisreservation",cta:"Reserve a court"},
+    {n:"Prospect Park — night play",i:"PP",price:32,unit:"per hour Fri–Sun",type:"public",loc:"Brooklyn",d:3.4,detail:"No permit needed for 7–11pm. $40/hr Mon–Thu.",src:"prospectpark.org",url:"https://www.prospectpark.org/visit-the-park/places-to-go/tennis-center/",cta:"Book night play"},
+    {n:"East River Park",i:"ER",price:0,unit:"first come, first served",type:"public",loc:"Lower East Side",d:2.9,detail:"6 hard courts, no reservation system.",src:"nycgovparks.org",url:null,cta:null,note:"No booking — just turn up"},
+    {n:"Cary Leeds Center",i:"CL",price:0,unit:"honors NYC permits",type:"public",loc:"Crotona Park, Bronx",d:6.1,detail:"22 courts. 6,000+ free community court-hours a year.",src:"nyjtl.org",url:"https://www.nyjtl.org/caryleeds/",cta:"Book a court"},
+    {n:"USTA Billie Jean King NTC",i:"BJ",price:null,unit:"rate not published",type:"public",loc:"Flushing Meadows",d:8.2,detail:"Public rental via CourtReserve. Closed early Aug–late Sep for the US Open.",src:"ntc.usta.com",url:"https://www.ntc.usta.com/",cta:"Book a court"},
+    {n:"Sutton East Tennis Club",i:"SE",price:null,unit:"membership, not published",type:"club",loc:"Midtown East",d:1.8,detail:"8 indoor red clay courts. Seasonal, Sept–May.",src:"club listings",url:null,cta:null,note:"Call the club to book"},
+    {n:"Roosevelt Island Racquet Club",i:"RI",price:null,unit:"membership, not published",type:"club",loc:"Roosevelt Island",d:2.2,detail:"12 indoor courts.",src:"advantagetennisclubs.com",url:"https://www.advantagetennisclubs.com/",cta:"Club website"},
+    {n:"Crotona Park courts",i:"CR",price:0,unit:"with NYC permit",type:"public",loc:"Bronx",d:6.3,detail:"20 courts — one of the largest public clusters in the city.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
+    {n:"Juniper Valley Park",i:"JV",price:0,unit:"with NYC permit",type:"public",loc:"Middle Village, Queens",d:5.8,detail:"10 courts. Popular with local leagues.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
+    {n:"Marine Park",i:"MP",price:0,unit:"with NYC permit",type:"public",loc:"South Brooklyn",d:7.2,detail:"10+ courts.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
+    {n:"McCarren Park",i:"MC",price:0,unit:"with NYC permit (summer)",type:"public",loc:"Greenpoint, Brooklyn",d:4.2,detail:"6 of 7 courts on the permit system in summer; bubbled and privately run Oct–Apr.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
+    {n:"Astoria Park",i:"AP",price:0,unit:"with NYC permit",type:"public",loc:"Astoria, Queens",d:4.6,detail:"Public courts under the Hell Gate Bridge.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
+    {n:"St. Mary's Park",i:"SM",price:0,unit:"with NYC permit",type:"public",loc:"South Bronx",d:5.4,detail:"Public courts, permit system.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"}
+  ],
+  LI:[
+    {n:"Town of Huntington courts",i:"TH",price:0,unit:"town courts",type:"public",loc:"13 parks, Huntington",d:1.6,detail:"9 unlighted + 4 lighted park locations.",src:"huntingtonny.gov",url:"https://www.huntingtonny.gov/tennis-courts",cta:"See town courts"},
+    {n:"Great Neck Park District",i:"GN",price:null,unit:"resident / guest permit",type:"public",loc:"Great Neck",d:2.9,detail:"4 indoor + 29 outdoor courts.",src:"gnparksny.gov",url:"https://www.gnparksny.gov/",cta:"Permits & booking"},
+    {n:"Garden City Tennis Center — senior",i:"GC",price:32,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"Weekday mornings/early afternoon. 4 Har-Tru indoor courts.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court"},
+    {n:"Garden City Tennis Center — summer",i:"GC",price:36,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"June 1–Labor Day, 8am–10pm. Village residents only.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court"},
+    {n:"Garden City — winter peak",i:"GC",price:64,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"Evenings and weekend mornings in the fall/winter season.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court"},
+    {n:"Bethpage Park Tennis Center",i:"BP",price:null,unit:"no membership fee",type:"club",loc:"Farmingdale",d:4.8,detail:"4 indoor hard + 4 indoor red clay + outdoor Har-Tru.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the centre to book"},
+    {n:"Huntington Indoor Tennis",i:"HI",price:null,unit:"no membership fee",type:"club",loc:"Huntington Station",d:1.9,detail:"6 climate-controlled Har-Tru courts, next to the LIRR.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the club to book"},
+    {n:"Carefree Racquet Club",i:"CR",price:null,unit:"pay per program",type:"club",loc:"North Merrick",d:5.3,detail:"7 indoor courts + 4 pickleball. No membership fee.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the club to book"},
+    {n:"Eisenhower Park",i:"EP",price:null,unit:"county permit, fee not published",type:"public",loc:"East Meadow (Nassau)",d:3.7,detail:"16 lighted courts — the largest public cluster in Nassau. Leisure Pass discount for county residents.",src:"nassaucountyny.gov",url:"https://www.nassaucountyny.gov/1794/Park-Permits",cta:"Permit info"},
+    {n:"Town of Smithtown courts",i:"SM",price:null,unit:"town courts",type:"public",loc:"Smithtown (Suffolk)",d:9.1,detail:"Town tennis and pickleball courts with a published seasonal schedule.",src:"smithtownny.gov",url:null,cta:null,note:"Check the town schedule"},
+    {n:"Town of Islip courts",i:"IS",price:null,unit:"town courts",type:"public",loc:"Islip (Suffolk)",d:11.4,detail:"Town tennis and pickleball program courts.",src:"townofislip-ny.gov",url:null,cta:null,note:"Check the town schedule"},
+    {n:"Suffolk County court finder",i:"SC",price:0,unit:"directory of public courts",type:"public",loc:"Countywide, Suffolk",d:0,detail:"Searchable directory of public courts across Suffolk, run by the county tennis foundation.",src:"sctef.org",url:"https://www.sctef.org/tennis-court-search.html",cta:"Search courts"}
+  ],
+  HAM:[
+    {n:"Village of Southampton permit",i:"SV",price:25,unit:"per season",type:"public",loc:"Southampton Village",d:2.3,detail:"Residents only. +$10 per additional family member.",src:"southamptonvillage.gov",url:"https://www.southamptonvillage.gov/365/Tennis-Permit-Application",cta:"Apply for a permit"},
+    {n:"Town of East Hampton courts",i:"EH",price:null,unit:"permit, fee not published",type:"public",loc:"Springs, Amagansett, Montauk",d:1.7,detail:"Resident-permit gated. Call the town for current fees.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info"},
+    {n:"Westhampton Beach — non-member",i:"WB",price:70,unit:"per hour",type:"club",loc:"Westhampton Beach",d:8.4,detail:"Walk-on court rental, no membership required.",src:"whbtennis.com",url:"https://whbtennis.com/",cta:"Book a court"},
+    {n:"East Hampton Indoor Tennis",i:"EI",price:80,unit:"per hour (platform/pickleball)",type:"club",loc:"East Hampton",d:1.4,detail:"6 indoor + 18 outdoor + 3 padel. Open 365 days.",src:"ehindoortennis.com",url:"https://ehindoortennis.com/",cta:"Book a court"},
+    {n:"Westhampton Beach — summer single",i:"WB",price:1650,unit:"per season",type:"club",loc:"Westhampton Beach",d:8.4,detail:"7 days a week. Weekday-only tiers from $850.",src:"whbtennis.com",url:"https://whbtennis.com/pricing/",cta:"Join for the season"},
+    {n:"Buckskill Tennis Club",i:"BT",price:2700,unit:"per season",type:"club",loc:"East Hampton",d:1.9,detail:"Grass, Har-Tru, Laykold and red clay. Monthly from $960.",src:"buckskilltennis.com",url:"https://buckskilltennis.com/",cta:"Join for the season"},
+    {n:"SPORTIME Amagansett",i:"SA",price:3190,unit:"per season",type:"club",loc:"Amagansett",d:3.1,detail:"33 Har-Tru courts. Family $6,380. Guest $40–50/day.",src:"sportimeny.com",url:"https://www.sportimeny.com/amagansett/",cta:"Join for the season"},
+    {n:"Gotham Tennis Academy",i:"GT",price:null,unit:"rate not published",type:"club",loc:"Montauk",d:9.2,detail:"8 clay courts on a nature preserve, open to the public.",src:"gothamtennismtk.com",url:"https://gothamtennismtk.com/",cta:"Book a court"},
+    {n:"Montauk town courts",i:"MK",price:null,unit:"resident permit",type:"public",loc:"Montauk",d:9.8,detail:"2 courts, pickleball-lined. East Hampton Town permit required.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info"},
+    {n:"Abrahams Path Recreation Facility",i:"AB",price:null,unit:"resident permit",type:"public",loc:"Amagansett",d:3.4,detail:"Town public courts. East Hampton Town permit required.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info"},
+    {n:"Springs courts",i:"SG",price:null,unit:"resident permit",type:"public",loc:"Springs, East Hampton",d:2.1,detail:"3 courts at the Springs Youth Association building.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info"},
+    {n:"Suffolk County court finder",i:"SC",price:0,unit:"directory of public courts",type:"public",loc:"Countywide, Suffolk",d:0,detail:"Searchable directory of public courts across Suffolk, including the East End.",src:"sctef.org",url:"https://www.sctef.org/tennis-court-search.html",cta:"Search courts"}
+  ]
+};
+
+const COURT={
+  private:{label:"has a court",  cls:"court-yes",   short:"private court"},
+  club:   {label:"club access",  cls:"court-club",  short:"club member"},
+  public: {label:"looking for a court",cls:"court-no",    short:"public courts only"}
+};
+
+let market="NYC", myUTR=5.0;
+let mFilter="all", cFilter="all", cSort=false, tSort="price", tPublic=false;
+const sent={};
+
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money=n=>"$"+n.toLocaleString();
+
+function renderMembers(){
+  const q=(document.getElementById("mSearch").value||"").toLowerCase();
+  let list=MEMBERS[market].filter(m=>
+    (m.n+" "+m.loc).toLowerCase().includes(q));
+  if(mFilter==="near") list=list.filter(m=>Math.abs(m.u-myUTR)<=0.5);
+  if(mFilter==="today") list=list.filter(m=>m.today);
+  if(mFilter==="court") list=list.filter(m=>m.court!=="public");
+  list.sort((a,b)=>Math.abs(a.u-myUTR)-Math.abs(b.u-myUTR));
+  document.getElementById("mCount").textContent=list.length+" player"+(list.length===1?"":"s");
+  document.getElementById("mGrid").innerHTML = list.length? list.map(m=>{
+    const gap=Math.abs(m.u-myUTR);
+    const fit = gap<=0.5 ? {t:"great match",c:"fit-great"}
+              : gap<=1.0 ? {t:"good match", c:"fit-good"}
+              : gap<=1.5 ? {t:"fair match", c:"fit-fair"}
+              :            {t:"stretch match",c:"fit-stretch"};
+    const key=market+m.n;
+    return `<div class="card">
+      <div class="row-top">
+        <div class="avatar">${esc(m.i)}</div>
+        <div>
+          <h3>${esc(m.n)}</h3>
+          <p class="sub">${esc(m.loc)} · ${m.d} mi away</p>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="tag rate">UTR ${m.u.toFixed(1)}</span>
+        <span class="tag ${fit.c}">${fit.t}</span>
+        <span class="tag ${COURT[m.court].cls}">${COURT[m.court].label}</span>
+        ${m.today?'<span class="tag free">free today</span>':""}
+      </div>
+      <p class="sub">${esc(m.pref)} · ${esc(m.avail)}</p>
+      <div class="foot">
+        <button class="act ${sent[key]?"done":""}" data-invite="${esc(key)}" ${sent[key]?"disabled":""}>
+          ${sent[key]?"Request sent":"Ask for a hit"}</button>
+        <span class="src">sample profile</span>
+      </div>
+    </div>`;}).join("")
+    : `<div class="empty">No players match that filter yet. Try widening your level range.</div>`;
+}
+
+function renderCoaches(){
+  const q=(document.getElementById("cSearch").value||"").toLowerCase();
+  let list=COACHES[market].filter(c=>(c.n+" "+c.loc+" "+c.spec).toLowerCase().includes(q));
+  if(cFilter!=="all") list=list.filter(c=>c.where===cFilter);
+  if(cSort) list=[...list].sort((a,b)=>(a.rate??1e9)-(b.rate??1e9));
+  document.getElementById("cCount").textContent=list.length+" coach"+(list.length===1?"":"es");
+  document.getElementById("cGrid").innerHTML = list.length? list.map(c=>{
+    const key=market+c.n;
+    return `<div class="card">
+      <div class="row-top">
+        <div class="avatar alt">${esc(c.i)}</div>
+        <div>
+          <h3>${esc(c.n)}</h3>
+          <p class="sub">${esc(c.loc)}</p>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="tag ${c.rate?"rate":"warn"}">${c.rate?money(c.rate)+"/hr":"rate on request"}</span>
+        <span class="tag">${c.where==="home"?"comes to you":"at a club"}</span>
+      </div>
+      <p class="sub">${esc(c.spec)}</p>
+      <div class="foot">
+        <button class="act ${sent[key]?"done":""}" data-invite="${esc(key)}" ${sent[key]?"disabled":""}>
+          ${sent[key]?"Enquiry sent":"Book a lesson"}</button>
+        <span class="src">${esc(c.src)}</span>
+      </div>
+    </div>`;}).join("")
+    : `<div class="empty">No coaches match that filter.</div>`;
+}
+
+function renderCourts(){
+  const q=(document.getElementById("tSearch").value||"").toLowerCase();
+  let list=COURTS[market].filter(t=>(t.n+" "+t.loc+" "+t.detail).toLowerCase().includes(q));
+  if(tPublic) list=list.filter(t=>t.type==="public");
+  list=[...list].sort((a,b)=> tSort==="dist" ? a.d-b.d : (a.price??1e9)-(b.price??1e9));
+  document.getElementById("tCount").textContent=list.length+" option"+(list.length===1?"":"s");
+  document.getElementById("tGrid").innerHTML = list.length? list.map(t=>{
+    const key=market+t.n+t.unit;
+    const priceTxt = t.price===0?"Free":t.price==null?"—":money(t.price);
+    return `<div class="card">
+      <div class="row-top">
+        <div class="avatar ${t.type==="club"?"alt":""}">${esc(t.i)}</div>
+        <div>
+          <h3>${esc(t.n)}</h3>
+          <p class="sub">${esc(t.loc)} · ${t.d} mi away</p>
+        </div>
+      </div>
+      <div class="price">${priceTxt} <small>${esc(t.unit)}</small></div>
+      <div class="meta">
+        <span class="tag ${t.type==="public"?"free":""}">${t.type==="public"?"public":"club"}</span>
+        ${t.price===0?'<span class="tag free">no court fee</span>':""}
+        ${t.price==null?'<span class="tag warn">pricing not published</span>':""}
+      </div>
+      <p class="sub">${esc(t.detail)}</p>
+      <div class="foot">
+        ${t.url
+          ? `<a class="act book" href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">${esc(t.cta||"Book a court")} &#8599;</a>`
+          : `<span class="nobook">${esc(t.note||"No online booking")}</span>`}
+        <button class="act ghost ${sent[key]?"done":""}" data-invite="${esc(key)}" ${sent[key]?"disabled":""}>
+          ${sent[key]?"Saved":"Save"}</button>
+        <span class="src">${esc(t.src)}</span>
+      </div>
+    </div>`;}).join("")
+    : `<div class="empty">No courts match that filter.</div>`;
+}
+
+function renderAll(){renderMembers();renderCoaches();renderCourts();}
+
+const PAGES=["login","signup","rating","members","coaches","courts"];
+const AUTHPAGES=["login","signup","rating"];
+const $=id=>document.getElementById(id);
+
+function showPage(name){
+  PAGES.forEach(p=>$("page-"+p).classList.toggle("hidden",p!==name));
+  document.querySelectorAll("nav.tabs button").forEach(x=>
+    x.classList.toggle("on",x.dataset.tab===name));
+  document.querySelector(".ctx").classList.toggle("hidden",AUTHPAGES.includes(name));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>showPage(b.dataset.tab));
+
+$("btnSignup").onclick=()=>showPage("signup");
+$("btnLogin").onclick =()=>showPage("login");
+$("btnRating").onclick=()=>showPage("rating");
+
+/* ---- log in: username + password only ---- */
+$("loginForm").onsubmit=e=>{
+  e.preventDefault();
+  const f=e.target, msg=$("loginMsg");
+  const fail=s=>{msg.textContent=s;msg.className="formnote err";};
+  if(!f.username.value.trim()) return fail("Please enter your username.");
+  if(!f.password.value) return fail("Please enter your password.");
+  msg.className="formnote ok";
+  msg.textContent="Logged in. Taking you to players near you…";
+  setTimeout(()=>{renderAll();showPage("members");},700);
+};
+
+/* ---- sign up ---- */
+$("signupForm").onsubmit=e=>{
+  e.preventDefault();
+  const f=e.target, msg=$("signupMsg");
+  const fail=s=>{msg.textContent=s;msg.className="formnote err";};
+  if(!f.name.value.trim()) return fail("Please enter your name.");
+  if(!f.username.value.trim()) return fail("Please pick a username.");
+  if(!/^\S+@\S+\.\S+$/.test(f.email.value.trim())) return fail("Please enter a valid email address.");
+  if(f.password.value.length<8) return fail("Password needs to be at least 8 characters.");
+  if(!f.terms.checked) return fail("Please accept the terms to continue.");
+  market=f.area.value; $("market").value=market;
+  msg.className="formnote ok";
+  msg.textContent="Account created. Next, link your rating…";
+  setTimeout(()=>{renderAll();showPage("rating");},700);
+};
+
+/* ---- link rating ---- */
+function rateOK(text){
+  const msg=$("rateMsg");
+  msg.className="formnote ok"; msg.textContent=text;
+}
+document.querySelectorAll(".rateForm").forEach(form=>{
+  form.onsubmit=e=>{
+    e.preventDefault();
+    const f=e.target, kind=f.dataset.kind, msg=$("rateMsg");
+    const isUTR=kind==="utr";
+    const label=isUTR?"UTR":"USTA";
+    const link=f.profile.value.trim();
+    const fail=s=>{msg.className="formnote err";msg.textContent=s;};
+
+    if(!link) return fail("Paste your "+label+" profile link, or set your level with the self-assessment instead.");
+    if(!/^https?:\/\/\S+\.\S+/.test(link))
+      return fail("That doesn't look like a valid link — it should start with https://");
+    if(!f.rating.value) return fail("Add your "+(isUTR?"UTR":"NTRP")+" rating so we know what we're confirming.");
+
+    const raw=parseFloat(f.rating.value);
+    if(isNaN(raw)) return fail("Enter your rating as a number.");
+    if(isUTR && (raw<1||raw>16.5)) return fail("UTR ratings run from 1.00 to 16.50.");
+
+    // NTRP and UTR are different scales; convert NTRP so both can drive matching.
+    const utr = isUTR ? raw : Math.round((raw-2.0)*2.2*10)/10;
+    myUTR = Math.max(1,Math.min(9,utr));
+    const opts=[...$("mylevel").options].map(o=>parseFloat(o.value));
+    $("mylevel").value=opts.reduce((a,b)=>Math.abs(b-myUTR)<Math.abs(a-myUTR)?b:a).toFixed(1);
+
+    const badge=$(isUTR?"utrStatus":"ustaStatus");
+    badge.textContent="pending review"; badge.className="tag warn";
+
+    rateOK("Sent for review — we'll check it within 24 hours. You'll show as self-rated until it clears."
+      +(isUTR?"" : " NTRP "+raw.toFixed(1)+" maps to roughly UTR "+utr.toFixed(1)+"."));
+    renderMembers();
+  };
+});
+$("selfLevel").onchange=e=>{
+  if(!e.target.value) return;
+  myUTR=parseFloat(e.target.value);
+  $("mylevel").value=e.target.value;
+  rateOK("Level set from your self-assessment.");
+  renderMembers();
+};
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>showPage(b.dataset.go));
+
+document.getElementById("market").onchange=e=>{market=e.target.value;renderAll();};
+document.getElementById("mylevel").onchange=e=>{myUTR=parseFloat(e.target.value);renderMembers();};
+document.getElementById("mSearch").oninput=renderMembers;
+document.getElementById("cSearch").oninput=renderCoaches;
+document.getElementById("tSearch").oninput=renderCourts;
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button");
+  if(!b) return;
+  if(b.dataset.mfilter){
+    document.querySelectorAll("[data-mfilter]").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); mFilter=b.dataset.mfilter; renderMembers();
+  }
+  if(b.dataset.cfilter){
+    document.querySelectorAll("[data-cfilter]").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); cFilter=b.dataset.cfilter; renderCoaches();
+  }
+  if(b.dataset.csort){ cSort=!cSort; b.classList.toggle("on",cSort); renderCoaches(); }
+  if(b.dataset.tsort){
+    document.querySelectorAll("[data-tsort]").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); tSort=b.dataset.tsort; renderCourts();
+  }
+  if(b.dataset.tfilter){ tPublic=!tPublic; b.classList.toggle("on",tPublic); renderCourts(); }
+  if(b.dataset.invite){ sent[b.dataset.invite]=true; renderAll(); }
+});
+
+renderAll();
+</script>
+</body>
+</html>
