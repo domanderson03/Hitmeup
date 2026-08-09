@@ -159,11 +159,12 @@
     border-radius:var(--radius);padding:12px 14px;
   }
   .note strong{color:var(--ink);font-weight:600;}
-  .hidden{display:none;}
+  .hidden{display:none !important;}
   .opener{cursor:pointer;}
   .opener:hover h3{text-decoration:underline;}
   .readmore{align-self:flex-start;font-size:12.5px;}
   .modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal.hidden{display:none;}
   .modal-back{position:absolute;inset:0;background:rgba(27,27,24,.45);}
   .modal-card{
     position:relative;background:var(--white);border:1px solid var(--line);
