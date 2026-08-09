@@ -604,7 +604,21 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/* ============================================================
+   BACKEND SETTINGS — paste your two Supabase values here.
+   Supabase dashboard → Project Settings → Data API.
+   Leave them blank and the site runs in demo mode on sample data.
+   ============================================================ */
+const SUPABASE_URL = "https://naampkfjhpycpjposybu.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_zf2BlIbXN0XjzPntJlcdvQ_uCENDy6M";
+
+const LIVE = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+const db = LIVE ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+let me = null;           // signed-in player's profile
+let liveMembers = null;  // real members pulled from the database
+
 const MEMBERS = {
   NYC:[
     {n:"Marcus Webb",i:"MW",u:5.2,loc:"Upper West Side",d:0.6,pref:"Baseline rallies, no scoring",avail:"Weekday mornings",today:true,court:"public"},
@@ -754,7 +768,9 @@ const money=n=>"$"+n.toLocaleString();
 
 function renderMembers(){
   const q=(document.getElementById("mSearch").value||"").toLowerCase();
-  let list=MEMBERS[market].filter(m=>
+  // Real members once the backend is connected; sample data otherwise.
+  const source = liveMembers ? liveMembers.filter(m=>m.area===market) : MEMBERS[market];
+  let list=source.filter(m=>
     (m.n+" "+m.loc).toLowerCase().includes(q));
   if(mFilter==="near") list=list.filter(m=>Math.abs(m.u-myUTR)<=0.5);
   if(mFilter==="today") list=list.filter(m=>m.today);
@@ -784,9 +800,10 @@ function renderMembers(){
       </div>
       <p class="sub">${esc(m.pref)} · ${esc(m.avail)}</p>
       <div class="foot">
-        <button class="act ${sent[key]?"done":""}" data-invite="${esc(key)}" ${sent[key]?"disabled":""}>
+        <button class="act ${sent[key]?"done":""}" data-invite="${esc(key)}"
+          ${m.id?`data-uid="${esc(m.id)}"`:""} ${sent[key]?"disabled":""}>
           ${sent[key]?"Request sent":"Ask for a hit"}</button>
-        <span class="src">sample profile</span>
+        <span class="src">${m.id?(m.verified==="checked"?"rating checked":m.verified==="pending"?"rating pending":"self-rated"):"sample profile"}</span>
       </div>
     </div>`;}).join("")
     : `<div class="empty">No players match that filter yet. Try widening your level range.</div>`;
@@ -878,19 +895,39 @@ $("btnLogin").onclick =()=>showPage("login");
 $("btnRating").onclick=()=>showPage("rating");
 
 /* ---- log in: username + password only ---- */
-$("loginForm").onsubmit=e=>{
+$("loginForm").onsubmit=async e=>{
   e.preventDefault();
   const f=e.target, msg=$("loginMsg");
   const fail=s=>{msg.textContent=s;msg.className="formnote err";};
-  if(!f.username.value.trim()) return fail("Please enter your username.");
+  const username=f.username.value.trim();
+  if(!username) return fail("Please enter your username.");
   if(!f.password.value) return fail("Please enter your password.");
-  msg.className="formnote ok";
-  msg.textContent="Logged in. Taking you to players near you…";
-  setTimeout(()=>{renderAll();showPage("members");},700);
+
+  if(!LIVE){
+    msg.className="formnote ok";
+    msg.textContent="Logged in (demo mode). Taking you to players near you…";
+    return setTimeout(()=>{renderAll();showPage("members");},700);
+  }
+
+  msg.className="formnote"; msg.textContent="Checking…";
+  try{
+    // Supabase signs in with an email, so translate the username first.
+    const {data:email,error:lookupErr}=await db.rpc("email_for_username",{p_username:username});
+    if(lookupErr) throw lookupErr;
+    if(!email) return fail("No account found with that username.");
+
+    const {error}=await db.auth.signInWithPassword({email,password:f.password.value});
+    if(error) return fail(error.message);
+
+    await loadMe();
+    msg.className="formnote ok"; msg.textContent="Logged in. Taking you to players near you…";
+    await refreshMembers();
+    setTimeout(()=>showPage("members"),500);
+  }catch(err){ fail(err.message||"Something went wrong. Please try again."); }
 };
 
 /* ---- sign up ---- */
-$("signupForm").onsubmit=e=>{
+$("signupForm").onsubmit=async e=>{
   e.preventDefault();
   const f=e.target, msg=$("signupMsg");
   const fail=s=>{msg.textContent=s;msg.className="formnote err";};
@@ -900,9 +937,32 @@ $("signupForm").onsubmit=e=>{
   if(f.password.value.length<8) return fail("Password needs to be at least 8 characters.");
   if(!f.terms.checked) return fail("Please accept the terms to continue.");
   market=f.area.value; $("market").value=market;
-  msg.className="formnote ok";
-  msg.textContent="Account created. Next, link your rating…";
-  setTimeout(()=>{renderAll();showPage("rating");},700);
+
+  if(!LIVE){
+    msg.className="formnote ok";
+    msg.textContent="Account created (demo mode). Next, link your rating…";
+    return setTimeout(()=>{renderAll();showPage("rating");},700);
+  }
+
+  msg.className="formnote"; msg.textContent="Creating your account…";
+  try{
+    const {error}=await db.auth.signUp({
+      email:f.email.value.trim(),
+      password:f.password.value,
+      options:{data:{
+        username:f.username.value.trim(),
+        full_name:f.name.value.trim(),
+        area:f.area.value,
+        court_access:f.court.value
+      }}
+    });
+    if(error) return fail(error.message);
+
+    await loadMe();
+    msg.className="formnote ok"; msg.textContent="Account created. Next, link your rating…";
+    await refreshMembers();
+    setTimeout(()=>showPage("rating"),500);
+  }catch(err){ fail(err.message||"Something went wrong. Please try again."); }
 };
 
 /* ---- link rating ---- */
@@ -937,6 +997,8 @@ document.querySelectorAll(".rateForm").forEach(form=>{
     const badge=$(isUTR?"utrStatus":"ustaStatus");
     badge.textContent="pending review"; badge.className="tag warn";
 
+    saveRating({utr:myUTR,rating_status:"pending",rating_source:kind,profile_link:link});
+
     rateOK("Sent for review — we'll check it within 24 hours. You'll show as self-rated until it clears."
       +(isUTR?"" : " NTRP "+raw.toFixed(1)+" maps to roughly UTR "+utr.toFixed(1)+"."));
     renderMembers();
@@ -946,10 +1008,95 @@ $("selfLevel").onchange=e=>{
   if(!e.target.value) return;
   myUTR=parseFloat(e.target.value);
   $("mylevel").value=e.target.value;
+  saveRating({utr:myUTR,rating_status:"self",rating_source:null});
   rateOK("Level set from your self-assessment.");
   renderMembers();
 };
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>showPage(b.dataset.go));
+
+/* ============================================================
+   BACKEND: load the signed-in profile, real members, and saving
+   ============================================================ */
+const initials=n=>(n||"?").split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+
+async function loadMe(){
+  if(!LIVE) return null;
+  const {data:{user}}=await db.auth.getUser();
+  if(!user){ me=null; paintAuthState(); return null; }
+  const {data}=await db.from("profiles").select("*").eq("id",user.id).single();
+  me=data||null;
+  if(me){
+    if(me.area){ market=me.area; $("market").value=market; }
+    if(me.utr!=null){
+      myUTR=Math.max(1,Math.min(9,Number(me.utr)));
+      const opts=[...$("mylevel").options].map(o=>parseFloat(o.value));
+      $("mylevel").value=opts.reduce((a,b)=>Math.abs(b-myUTR)<Math.abs(a-myUTR)?b:a).toFixed(1);
+    }
+    if(me.rating_source==="utr"||me.rating_source==="usta"){
+      const badge=$(me.rating_source==="utr"?"utrStatus":"ustaStatus");
+      if(me.rating_status==="pending"){badge.textContent="pending review";badge.className="tag warn";}
+      if(me.rating_status==="checked"){badge.textContent="profile checked";badge.className="tag court-yes";}
+    }
+  }
+  paintAuthState();
+  return me;
+}
+
+function paintAuthState(){
+  const box=$("authBtns");
+  if(me){
+    box.innerHTML='<button class="chip" id="btnRating">Link rating</button>'
+      +'<span class="pill-me"><span class="av">'+initials(me.full_name||me.username)+'</span>'
+      +(me.username||"")+'</span>'
+      +'<button class="chip" id="btnLogout">Log out</button>';
+    $("btnRating").onclick=()=>showPage("rating");
+    $("btnLogout").onclick=async()=>{
+      await db.auth.signOut(); me=null; liveMembers=null;
+      paintAuthState(); renderAll(); showPage("login");
+    };
+  }
+}
+
+async function refreshMembers(){
+  if(!LIVE) return;
+  const {data,error}=await db.from("profiles").select("*").order("created_at",{ascending:false});
+  if(error||!data) return;
+  liveMembers=data
+    .filter(p=>!me||p.id!==me.id)   // don't show yourself
+    .map(p=>({
+      id:p.id,
+      n:p.full_name||p.username,
+      i:initials(p.full_name||p.username),
+      u:p.utr!=null?Number(p.utr):4.0,
+      loc:p.neighborhood||({NYC:"New York City",LI:"Long Island",HAM:"The Hamptons"}[p.area]||""),
+      d:0,
+      pref:p.play_prefs||"No preferences set yet",
+      avail:p.availability||"Availability not set",
+      today:!!p.free_today,
+      court:p.court_access||"public",
+      area:p.area,
+      verified:p.rating_status
+    }));
+  renderMembers();
+}
+
+// Save a rating submission (or self-assessment) to the player's profile.
+async function saveRating(fields){
+  if(!LIVE||!me) return;
+  const {error}=await db.from("profiles").update(fields).eq("id",me.id);
+  if(!error) Object.assign(me,fields);
+}
+
+// Record a hit request so the other player can see it.
+async function sendHitRequest(toUserId){
+  if(!LIVE||!me) return;
+  await db.from("hit_requests").insert({from_user:me.id,to_user:toUserId,status:"pending"});
+}
+
+if(LIVE){
+  db.auth.onAuthStateChange(()=>{});
+  loadMe().then(()=>refreshMembers());
+}
 
 document.getElementById("market").onchange=e=>{market=e.target.value;renderAll();};
 document.getElementById("mylevel").onchange=e=>{myUTR=parseFloat(e.target.value);renderMembers();};
@@ -974,7 +1121,11 @@ document.addEventListener("click",e=>{
     b.classList.add("on"); tSort=b.dataset.tsort; renderCourts();
   }
   if(b.dataset.tfilter){ tPublic=!tPublic; b.classList.toggle("on",tPublic); renderCourts(); }
-  if(b.dataset.invite){ sent[b.dataset.invite]=true; renderAll(); }
+  if(b.dataset.invite){
+    sent[b.dataset.invite]=true;
+    if(b.dataset.uid) sendHitRequest(b.dataset.uid);
+    renderAll();
+  }
 });
 
 renderAll();
