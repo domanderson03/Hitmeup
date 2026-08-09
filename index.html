@@ -160,6 +160,32 @@
   }
   .note strong{color:var(--ink);font-weight:600;}
   .hidden{display:none;}
+  .opener{cursor:pointer;}
+  .opener:hover h3{text-decoration:underline;}
+  .readmore{align-self:flex-start;font-size:12.5px;}
+  .modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal-back{position:absolute;inset:0;background:rgba(27,27,24,.45);}
+  .modal-card{
+    position:relative;background:var(--white);border:1px solid var(--line);
+    border-radius:16px;padding:24px;max-width:460px;width:100%;
+    max-height:85vh;overflow:auto;
+  }
+  .modal-x{
+    position:absolute;top:12px;right:14px;background:none;border:none;
+    font-size:24px;line-height:1;color:var(--muted);cursor:pointer;padding:4px;
+  }
+  .modal-x:hover{color:var(--ink);}
+  .mm-head{display:flex;gap:14px;align-items:center;margin-bottom:14px;}
+  .mm-head .avatar{width:58px;height:58px;font-size:18px;}
+  .mm-head h3{margin:0;font-size:19px;font-weight:600;}
+  .mm-bio{
+    font-size:14px;line-height:1.65;margin:14px 0;padding:14px;
+    background:var(--cream-2);border:1px solid var(--line);border-radius:var(--radius);
+  }
+  .mm-rows{font-size:13px;margin:14px 0;}
+  .mm-rows div{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);}
+  .mm-rows div:last-child{border-bottom:none;}
+  .mm-rows span:first-child{color:var(--muted);min-width:110px;}
   .site-foot{
     border-top:1px solid var(--line);background:var(--cream-2);
     padding:16px 0;font-size:12px;color:var(--muted);
@@ -214,6 +240,11 @@
   .fields{display:flex;flex-direction:column;gap:14px;}
   .fld{display:flex;flex-direction:column;gap:5px;}
   .fld > span{font-size:13px;font-weight:600;}
+  .fld textarea{
+    font:inherit;font-size:14px;background:var(--white);
+    border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--ink);
+    width:100%;resize:vertical;
+  }
   .fld input,.fld select{
     font:inherit;font-size:14px;background:var(--white);
     border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--ink);width:100%;
@@ -481,6 +512,12 @@
             </label>
 
             <label class="fld">
+              <span>Short bio</span>
+              <textarea name="bio" rows="3" placeholder="A couple of lines about your game, how long you've played, what you're looking for."></textarea>
+              <span class="hint">Shown when someone opens your profile, before they ask for a hit.</span>
+            </label>
+
+            <label class="fld">
               <span>What kind of hit are you after?</span>
               <input type="text" name="play_prefs" placeholder="e.g. Baseline rallies, no scoring">
             </label>
@@ -665,6 +702,14 @@
 
 </main>
 
+<div id="memberModal" class="modal hidden">
+  <div class="modal-back" data-close="1"></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="mmName">
+    <button class="modal-x" data-close="1" aria-label="Close">&times;</button>
+    <div id="mmBody"></div>
+  </div>
+</div>
+
 <footer class="site-foot">
   <div class="wrap">
     <span>&copy; 2026 Dominic Anderson &middot; HitMeUp</span>
@@ -689,61 +734,61 @@ let liveMembers = null;  // real members pulled from the database
 
 const MEMBERS = {
   NYC:[
-    {n:"Marcus Webb",i:"MW",u:5.2,loc:"Upper West Side",d:0.6,pref:"Baseline rallies, no scoring",avail:"Weekday mornings",today:true,court:"public"},
-    {n:"Priya Raman",i:"PR",u:4.8,loc:"Chelsea",d:1.1,pref:"Sets, competitive",avail:"Evenings after 6",today:true,court:"public"},
-    {n:"Danny Ortiz",i:"DO",u:5.1,loc:"Astoria",d:2.4,pref:"Drills then a set",avail:"Weekends",today:false,court:"club"},
-    {n:"Alice Chen",i:"AC",u:6.4,loc:"Brooklyn Heights",d:3.2,pref:"Hard hitting, singles",avail:"Sat & Sun AM",today:false,court:"public"},
-    {n:"Tom Feeney",i:"TF",u:3.9,loc:"Hell's Kitchen",d:0.9,pref:"Casual, still learning",avail:"Flexible",today:true,court:"public"},
-    {n:"Sonia Alvarez",i:"SA",u:5,loc:"Harlem",d:2.8,pref:"Doubles, looking for a 4th",avail:"Weekday evenings",today:false,court:"club"},
-    {n:"Ben Whitfield",i:"BW",u:7.6,loc:"Financial District",d:4.1,pref:"Match play only",avail:"Early mornings",today:false,court:"public"},
-    {n:"Nina Kowalski",i:"NK",u:4.9,loc:"Williamsburg",d:3.6,pref:"Rally + serve practice",avail:"Weekends",today:true,court:"private"},
-    {n:"Ellie Fournier",i:"EF",u:1.4,loc:"Murray Hill",d:1.3,pref:"Total beginner, first racquet",avail:"Weekend mornings",today:true,court:"public"},
-    {n:"Omar Haddad",i:"OH",u:2.1,loc:"Inwood",d:5.2,pref:"Learning to rally, very patient needed",avail:"Weeknights",today:false,court:"club"},
-    {n:"Grace Whitmore",i:"GW",u:2.6,loc:"Park Slope",d:3.9,pref:"Beginner drills, no scoring yet",avail:"Sat AM",today:true,court:"public"},
-    {n:"Luis Fernández",i:"LF",u:3.2,loc:"Sunnyside",d:2.6,pref:"Improver, working on consistency",avail:"Flexible",today:false,court:"public"},
-    {n:"Kiara Blackwood",i:"KB",u:3.7,loc:"Bushwick",d:4.3,pref:"Casual sets, still learning",avail:"Weekends",today:true,court:"club"},
-    {n:"Peter Mihailov",i:"PM",u:4.3,loc:"Tribeca",d:2,pref:"Steady baseline, no big serves",avail:"Weekday lunch",today:false,court:"public"},
-    {n:"Rachel Osei",i:"RO",u:4.6,loc:"Crown Heights",d:4.7,pref:"Doubles or singles, easygoing",avail:"Sun afternoons",today:true,court:"public"},
-    {n:"Julian Reyes",i:"JU",u:5.5,loc:"East Village",d:1.6,pref:"Fast-paced rallies, tiebreaks",avail:"Weeknights",today:false,court:"club"},
-    {n:"Amara Nkemelu",i:"AN",u:5.9,loc:"Long Island City",d:3.1,pref:"Singles, competitive but friendly",avail:"Early mornings",today:true,court:"public"},
-    {n:"Simon Bright",i:"SB",u:6.2,loc:"Battery Park City",d:3.8,pref:"Match play, USTA 4.0 level",avail:"Weekends",today:false,court:"private"},
-    {n:"Hana Yoshida",i:"HY",u:6.7,loc:"Greenpoint",d:4,pref:"Serve & volley practice",avail:"Weekday evenings",today:true,court:"club"},
-    {n:"Dmitri Volkov",i:"DV",u:7.1,loc:"Riverdale",d:6.9,pref:"Hard hitting, best of 3",avail:"Sat mornings",today:false,court:"public"},
-    {n:"Chloe Bertrand",i:"CB",u:8,loc:"Forest Hills",d:7.4,pref:"Former college player, match play",avail:"Weekday mornings",today:true,court:"public"},
-    {n:"Ibrahim Sallah",i:"IS",u:8.6,loc:"Jackson Heights",d:5.6,pref:"High intensity, tournament prep",avail:"Early AM only",today:false,court:"club"},
-    {n:"Whitney Gale",i:"WG",u:9,loc:"Upper East Side",d:2.3,pref:"Open level, looking for a regular",avail:"Flexible",today:true,court:"private"}
+    {n:"Marcus Webb",i:"MW",u:5.2,loc:"Upper West Side",d:0.6,pref:"Baseline rallies, no scoring",avail:"Weekday mornings",today:true,court:"public",bio:"Grew up playing in Riverside Park and never really stopped. Happy to warm up slowly and hit for an hour without keeping score."},
+    {n:"Priya Raman",i:"PR",u:4.8,loc:"Chelsea",d:1.1,pref:"Sets, competitive",avail:"Evenings after 6",today:true,court:"public",bio:"Played number two singles in college and still gets competitive about it. Prefers full sets and will absolutely chase down a drop shot."},
+    {n:"Danny Ortiz",i:"DO",u:5.1,loc:"Astoria",d:2.4,pref:"Drills then a set",avail:"Weekends",today:false,court:"club",bio:"Weekend player who likes to drill cross-court for twenty minutes before playing points. Reliable, punctual, brings extra balls."},
+    {n:"Alice Chen",i:"AC",u:6.4,loc:"Brooklyn Heights",d:3.2,pref:"Hard hitting, singles",avail:"Sat & Sun AM",today:false,court:"public",bio:"Big forehand, flat and heavy. Looking for someone who can handle pace and wants a proper workout rather than a social hit."},
+    {n:"Tom Feeney",i:"TF",u:3.9,loc:"Hell's Kitchen",d:0.9,pref:"Casual, still learning",avail:"Flexible",today:true,court:"public",bio:"Six months into tennis and loving it. Still learning where to stand on serve, so patience appreciated. Beers after are non-negotiable."},
+    {n:"Sonia Alvarez",i:"SA",u:5,loc:"Harlem",d:2.8,pref:"Doubles, looking for a 4th",avail:"Weekday evenings",today:false,court:"club",bio:"Doubles specialist looking for a regular fourth. Good hands at net, terrible overhead, working on it."},
+    {n:"Ben Whitfield",i:"BW",u:7.6,loc:"Financial District",d:4.1,pref:"Match play only",avail:"Early mornings",today:false,court:"public",bio:"Plays USTA leagues and treats every match like it counts. Early mornings only, on court by 6:30, done by 8."},
+    {n:"Nina Kowalski",i:"NK",u:4.9,loc:"Williamsburg",d:3.6,pref:"Rally + serve practice",avail:"Weekends",today:true,court:"private",bio:"Came back to tennis after a decade off. Rebuilding my serve from scratch and enjoying every minute of it."},
+    {n:"Ellie Fournier",i:"EF",u:1.4,loc:"Murray Hill",d:1.3,pref:"Total beginner, first racquet",avail:"Weekend mornings",today:true,court:"public",bio:"Bought a racquet last month and have hit exactly twice. Looking for someone kind who will feed me balls and not laugh."},
+    {n:"Omar Haddad",i:"OH",u:2.1,loc:"Inwood",d:5.2,pref:"Learning to rally, very patient needed",avail:"Weeknights",today:false,court:"club",bio:"Learning the game properly for the first time at 34. Can rally maybe six shots before something goes wrong. Working on it."},
+    {n:"Grace Whitmore",i:"GW",u:2.6,loc:"Park Slope",d:3.9,pref:"Beginner drills, no scoring yet",avail:"Sat AM",today:true,court:"public",bio:"Beginner who has taken a few group clinics. Would rather do drills than play points until my rally is more reliable."},
+    {n:"Luis Fernández",i:"LF",u:3.2,loc:"Sunnyside",d:2.6,pref:"Improver, working on consistency",avail:"Flexible",today:false,court:"public",bio:"Getting more consistent every month. My backhand is a work in progress but my forehand is finally landing in."},
+    {n:"Kiara Blackwood",i:"KB",u:3.7,loc:"Bushwick",d:4.3,pref:"Casual sets, still learning",avail:"Weekends",today:true,court:"club",bio:"Play casual sets with friends and want to get better. Not fussed about winning, just want longer rallies."},
+    {n:"Peter Mihailov",i:"PM",u:4.3,loc:"Tribeca",d:2,pref:"Steady baseline, no big serves",avail:"Weekday lunch",today:false,court:"public",bio:"Steady baseline player, no huge weapons. Lunchtime hits near the office suit me best. Reliable and low drama."},
+    {n:"Rachel Osei",i:"RO",u:4.6,loc:"Crown Heights",d:4.7,pref:"Doubles or singles, easygoing",avail:"Sun afternoons",today:true,court:"public",bio:"Easygoing player happy with singles or doubles. Good rally partner, decent volleys, terrible at keeping score."},
+    {n:"Julian Reyes",i:"JU",u:5.5,loc:"East Village",d:1.6,pref:"Fast-paced rallies, tiebreaks",avail:"Weeknights",today:false,court:"club",bio:"Quick around the court and like a fast-paced hit. Tiebreaks are my favourite way to finish a session."},
+    {n:"Amara Nkemelu",i:"AN",u:5.9,loc:"Long Island City",d:3.1,pref:"Singles, competitive but friendly",avail:"Early mornings",today:true,court:"public",bio:"Competitive but friendly. I hit hard, I run everything down, and I will not sulk if you beat me."},
+    {n:"Simon Bright",i:"SB",u:6.2,loc:"Battery Park City",d:3.8,pref:"Match play, USTA 4.0 level",avail:"Weekends",today:false,court:"private",bio:"Solid 4.0 league player. Comfortable at net, working on my second serve, always up for a match."},
+    {n:"Hana Yoshida",i:"HY",u:6.7,loc:"Greenpoint",d:4,pref:"Serve & volley practice",avail:"Weekday evenings",today:true,court:"club",bio:"Serve and volley by instinct, which does not always go well. Looking for someone to practise returns against."},
+    {n:"Dmitri Volkov",i:"DV",u:7.1,loc:"Riverdale",d:6.9,pref:"Hard hitting, best of 3",avail:"Sat mornings",today:false,court:"public",bio:"Heavy topspin, long rallies, best of three. If you want a physical match that goes two hours, I am your guy."},
+    {n:"Chloe Bertrand",i:"CB",u:8,loc:"Forest Hills",d:7.4,pref:"Former college player, match play",avail:"Weekday mornings",today:true,court:"public",bio:"Played Division I and still hit most mornings. Happy to play with anyone who can keep a rally going at pace."},
+    {n:"Ibrahim Sallah",i:"IS",u:8.6,loc:"Jackson Heights",d:5.6,pref:"High intensity, tournament prep",avail:"Early AM only",today:false,court:"club",bio:"Training for tournaments so my sessions are structured: drills, serves, then sets. Early mornings only."},
+    {n:"Whitney Gale",i:"WG",u:9,loc:"Upper East Side",d:2.3,pref:"Open level, looking for a regular",avail:"Flexible",today:true,court:"private",bio:"Open level player looking for a regular partner rather than one-off hits. Consistency matters more to me than level."}
   ],
   LI:[
-    {n:"Greg Santoro",i:"GS",u:5.3,loc:"Garden City",d:1.4,pref:"Singles, best of 3",avail:"Weekday evenings",today:true,court:"club"},
-    {n:"Marie Delaney",i:"MD",u:4.7,loc:"Huntington",d:2.2,pref:"Social doubles",avail:"Weekday mornings",today:false,court:"public"},
-    {n:"Rob Klein",i:"RK",u:5,loc:"Port Washington",d:3,pref:"Drills, high intensity",avail:"Sat AM",today:true,court:"club"},
-    {n:"Ana Lucia Reis",i:"AR",u:6.1,loc:"Great Neck",d:2.7,pref:"Match play, USTA 4.0",avail:"Sun afternoons",today:false,court:"private"},
-    {n:"Ted Nakamura",i:"TN",u:4.2,loc:"Rockville Centre",d:4.4,pref:"Improver, patient partner",avail:"Flexible",today:true,court:"public"},
-    {n:"Hannah Boyle",i:"HB",u:5.4,loc:"Oceanside",d:5.1,pref:"Baseline rallies",avail:"Weeknights",today:false,court:"club"},
-    {n:"Denise Corrigan",i:"DC",u:1.8,loc:"Levittown",d:6.2,pref:"Just started, learning grips",avail:"Weekday mornings",today:true,court:"public"},
-    {n:"Sam Petrosyan",i:"SP",u:2.4,loc:"Massapequa",d:7.1,pref:"Beginner, wants a hitting buddy",avail:"Weekends",today:false,court:"private"},
-    {n:"Farrah Idris",i:"FI",u:3,loc:"Syosset",d:3.3,pref:"Improver, mini-tennis and rallies",avail:"Sat AM",today:true,court:"club"},
-    {n:"Michael Dunne",i:"MI",u:3.6,loc:"Bethpage",d:4.9,pref:"Social hit, no pressure",avail:"Sun mornings",today:false,court:"public"},
-    {n:"Lena Brackmann",i:"LB",u:4.4,loc:"Manhasset",d:2.5,pref:"Consistent rallies, some doubles",avail:"Weekday evenings",today:true,court:"club"},
-    {n:"Curtis Nyland",i:"CN",u:5.8,loc:"Smithtown",d:8.3,pref:"Competitive singles",avail:"Weeknights",today:false,court:"private"},
-    {n:"Priscilla Achebe",i:"PA",u:6.5,loc:"Northport",d:6.6,pref:"Match play, USTA league",avail:"Weekends",today:true,court:"public"},
-    {n:"Aaron Feldstein",i:"AF",u:7.3,loc:"Dix Hills",d:7.8,pref:"Drills then sets, high pace",avail:"Early mornings",today:false,court:"club"},
-    {n:"Yuki Tanabe",i:"YT",u:8.4,loc:"Melville",d:6,pref:"Former D1, tournament prep",avail:"Sat & Sun AM",today:true,court:"private"}
+    {n:"Greg Santoro",i:"GS",u:5.3,loc:"Garden City",d:1.4,pref:"Singles, best of 3",avail:"Weekday evenings",today:true,court:"club",bio:"Singles player who likes best of three and a proper warm-up. Been playing at the same club for fifteen years."},
+    {n:"Marie Delaney",i:"MD",u:4.7,loc:"Huntington",d:2.2,pref:"Social doubles",avail:"Weekday mornings",today:false,court:"public",bio:"Social doubles most weeks. I am there for the tennis and the coffee afterwards in roughly equal measure."},
+    {n:"Rob Klein",i:"RK",u:5,loc:"Port Washington",d:3,pref:"Drills, high intensity",avail:"Sat AM",today:true,court:"club",bio:"High intensity drilling is my thing. Twenty minutes of cross-court, twenty of down the line, then points."},
+    {n:"Ana Lucia Reis",i:"AR",u:6.1,loc:"Great Neck",d:2.7,pref:"Match play, USTA 4.0",avail:"Sun afternoons",today:false,court:"private",bio:"USTA 4.0 and play league matches most weekends. Looking for practice partners between matches."},
+    {n:"Ted Nakamura",i:"TN",u:4.2,loc:"Rockville Centre",d:4.4,pref:"Improver, patient partner",avail:"Flexible",today:true,court:"public",bio:"Improver who is finally hitting through the ball. Flexible schedule, just looking for someone patient."},
+    {n:"Hannah Boyle",i:"HB",u:5.4,loc:"Oceanside",d:5.1,pref:"Baseline rallies",avail:"Weeknights",today:false,court:"club",bio:"Baseline rallies are my happy place. Not a big server, but I will keep the ball in play all day."},
+    {n:"Denise Corrigan",i:"DC",u:1.8,loc:"Levittown",d:6.2,pref:"Just started, learning grips",avail:"Weekday mornings",today:true,court:"public",bio:"Started lessons this spring. Can serve underarm reliably and overarm occasionally. Very much a beginner."},
+    {n:"Sam Petrosyan",i:"SP",u:2.4,loc:"Massapequa",d:7.1,pref:"Beginner, wants a hitting buddy",avail:"Weekends",today:false,court:"private",bio:"New to tennis and looking for a regular hitting buddy at the same stage. Weekends work best."},
+    {n:"Farrah Idris",i:"FI",u:3,loc:"Syosset",d:3.3,pref:"Improver, mini-tennis and rallies",avail:"Sat AM",today:true,court:"club",bio:"A few months in and improving fast. Happy doing mini-tennis to warm up and building from there."},
+    {n:"Michael Dunne",i:"MI",u:3.6,loc:"Bethpage",d:4.9,pref:"Social hit, no pressure",avail:"Sun mornings",today:false,court:"public",bio:"Play once a week for the exercise. No pressure, no scoring, just a decent hit and a chat."},
+    {n:"Lena Brackmann",i:"LB",u:4.4,loc:"Manhasset",d:2.5,pref:"Consistent rallies, some doubles",avail:"Weekday evenings",today:true,court:"club",bio:"Consistent rallies, occasional doubles. I am not going to hit winners but I will get everything back."},
+    {n:"Curtis Nyland",i:"CN",u:5.8,loc:"Smithtown",d:8.3,pref:"Competitive singles",avail:"Weeknights",today:false,court:"private",bio:"Competitive singles player. Weeknights suit me, and I am happy to travel a bit for a good match."},
+    {n:"Priscilla Achebe",i:"PA",u:6.5,loc:"Northport",d:6.6,pref:"Match play, USTA league",avail:"Weekends",today:true,court:"public",bio:"League player who takes it seriously without being unbearable about it. Looking for match practice."},
+    {n:"Aaron Feldstein",i:"AF",u:7.3,loc:"Dix Hills",d:7.8,pref:"Drills then sets, high pace",avail:"Early mornings",today:false,court:"club",bio:"Drills then sets, high pace throughout. Early mornings before work are when I play best."},
+    {n:"Yuki Tanabe",i:"YT",u:8.4,loc:"Melville",d:6,pref:"Former D1, tournament prep",avail:"Sat & Sun AM",today:true,court:"private",bio:"Former D1 player now prepping for tournaments. Happy to hit with anyone who can sustain a rally at pace."}
   ],
   HAM:[
-    {n:"Charles Ellery",i:"CE",u:5.1,loc:"East Hampton",d:1.2,pref:"Mornings before the heat",avail:"Summer weekdays",today:true,court:"private"},
-    {n:"Vanessa Cole",i:"VC",u:4.9,loc:"Sag Harbor",d:2.6,pref:"Doubles at a private court",avail:"Weekends",today:true,court:"private"},
-    {n:"Jonah Reyes",i:"JR",u:6.8,loc:"Bridgehampton",d:3.4,pref:"Competitive singles",avail:"Early AM",today:false,court:"club"},
-    {n:"Pippa Lindqvist",i:"PL",u:5.2,loc:"Southampton",d:4,pref:"Rally, then a light set",avail:"Weekday afternoons",today:false,court:"private"},
-    {n:"Owen Marsh",i:"OM",u:4.4,loc:"Amagansett",d:5.5,pref:"Casual hit, guest of a member",avail:"Aug only",today:true,court:"public"},
-    {n:"Bitsy Kellerman",i:"BK",u:1.2,loc:"Water Mill",d:3.8,pref:"Complete beginner, private court",avail:"Weekday mornings",today:true,court:"private"},
-    {n:"Rafael Duarte",i:"RD",u:2.8,loc:"Hampton Bays",d:9.4,pref:"Learning, happy to feed and rally",avail:"Weekends",today:false,court:"club"},
-    {n:"Margot Sinclair",i:"MS",u:3.4,loc:"Wainscott",d:2.9,pref:"Improver, social doubles",avail:"Summer weekdays",today:true,court:"private"},
-    {n:"Nikhil Varma",i:"NV",u:4.1,loc:"Quogue",d:11.2,pref:"Steady rallies, mornings",avail:"Weekends",today:false,court:"public"},
-    {n:"Serena Bloomfield",i:"SB",u:5.7,loc:"Sagaponack",d:4.6,pref:"Doubles at my own court",avail:"Weekday afternoons",today:true,court:"private"},
-    {n:"Gustav Lindholm",i:"GL",u:6.3,loc:"Shelter Island",d:12.5,pref:"Singles, ferry-friendly times",avail:"Sun mornings",today:false,court:"private"},
-    {n:"Theo Marchetti",i:"TM",u:7.9,loc:"Springs",d:2.2,pref:"Match play, fast pace",avail:"Early AM",today:true,court:"club"},
-    {n:"Delphine Aubert",i:"DA2",u:8.8,loc:"Montauk",d:10.1,pref:"Open level, tournament regular",avail:"Aug weekends",today:false,court:"private"}
+    {n:"Charles Ellery",i:"CE",u:5.1,loc:"East Hampton",d:1.2,pref:"Mornings before the heat",avail:"Summer weekdays",today:true,court:"private",bio:"Out here most of the summer and like to be on court before the heat. Steady game, good company."},
+    {n:"Vanessa Cole",i:"VC",u:4.9,loc:"Sag Harbor",d:2.6,pref:"Doubles at a private court",avail:"Weekends",today:true,court:"private",bio:"Play doubles on a private court most weekends and often need a fourth. Relaxed, social tennis."},
+    {n:"Jonah Reyes",i:"JR",u:6.8,loc:"Bridgehampton",d:3.4,pref:"Competitive singles",avail:"Early AM",today:false,court:"club",bio:"Competitive singles player. Early mornings, hard hitting, and I will want to play a full match."},
+    {n:"Pippa Lindqvist",i:"PL",u:5.2,loc:"Southampton",d:4,pref:"Rally, then a light set",avail:"Weekday afternoons",today:false,court:"private",bio:"Rally for a while, then a light set. Afternoons suit me. More interested in a good hit than a result."},
+    {n:"Owen Marsh",i:"OM",u:4.4,loc:"Amagansett",d:5.5,pref:"Casual hit, guest of a member",avail:"Aug only",today:true,court:"public",bio:"Here in August only, playing as a guest of a member. Casual hit is all I am after."},
+    {n:"Bitsy Kellerman",i:"BK",u:1.2,loc:"Water Mill",d:3.8,pref:"Complete beginner, private court",avail:"Weekday mornings",today:true,court:"private",bio:"Complete beginner with a court at the house and no one to use it with. Would love someone patient."},
+    {n:"Rafael Duarte",i:"RD",u:2.8,loc:"Hampton Bays",d:9.4,pref:"Learning, happy to feed and rally",avail:"Weekends",today:false,court:"club",bio:"Learning the game and happy to feed balls or rally at whatever pace suits. Weekends are best."},
+    {n:"Margot Sinclair",i:"MS",u:3.4,loc:"Wainscott",d:2.9,pref:"Improver, social doubles",avail:"Summer weekdays",today:true,court:"private",bio:"Improver who mostly plays social doubles. Looking to get more court time in over the summer."},
+    {n:"Nikhil Varma",i:"NV",u:4.1,loc:"Quogue",d:11.2,pref:"Steady rallies, mornings",avail:"Weekends",today:false,court:"public",bio:"Steady rallies, mornings preferred. Not competitive, just enjoy being on court a few times a week."},
+    {n:"Serena Bloomfield",i:"SB",u:5.7,loc:"Sagaponack",d:4.6,pref:"Doubles at my own court",avail:"Weekday afternoons",today:true,court:"private",bio:"Have a court at home and play doubles most weekday afternoons. Always looking for another pair."},
+    {n:"Gustav Lindholm",i:"GL",u:6.3,loc:"Shelter Island",d:12.5,pref:"Singles, ferry-friendly times",avail:"Sun mornings",today:false,court:"private",bio:"On Shelter Island so ferry timings matter. Singles player, decent level, flexible on Sundays."},
+    {n:"Theo Marchetti",i:"TM",u:7.9,loc:"Springs",d:2.2,pref:"Match play, fast pace",avail:"Early AM",today:true,court:"club",bio:"Fast-paced match play, early mornings. I will push you and expect the same back."},
+    {n:"Delphine Aubert",i:"DA2",u:8.8,loc:"Montauk",d:10.1,pref:"Open level, tournament regular",avail:"Aug weekends",today:false,court:"private",bio:"Open level and play tournaments through the summer. Looking for hitting partners who can keep up."}
   ]
 };
 
@@ -828,6 +873,7 @@ const COURT={
 };
 
 let market="NYC", myUTR=5.0;
+let shown=[];   // the member list currently on screen
 let mFilter="all", cFilter="all", cSort=false, tSort="price", tPublic=false;
 const sent={};
 
@@ -836,8 +882,9 @@ const money=n=>"$"+n.toLocaleString();
 
 function renderMembers(){
   const q=(document.getElementById("mSearch").value||"").toLowerCase();
-  // Real members once the backend is connected; sample data otherwise.
-  const source = liveMembers ? liveMembers.filter(m=>m.area===market) : MEMBERS[market];
+  // Real signed-up players first, then the sample profiles.
+  const real = liveMembers ? liveMembers.filter(m=>m.area===market) : [];
+  const source = real.concat(MEMBERS[market].map(m=>({...m,sample:true})));
   let list=source.filter(m=>
     (m.n+" "+m.loc).toLowerCase().includes(q));
   if(mFilter==="near") list=list.filter(m=>Math.abs(m.u-myUTR)<=0.5);
@@ -845,7 +892,8 @@ function renderMembers(){
   if(mFilter==="court") list=list.filter(m=>m.court!=="public");
   list.sort((a,b)=>Math.abs(a.u-myUTR)-Math.abs(b.u-myUTR));
   document.getElementById("mCount").textContent=list.length+" player"+(list.length===1?"":"s");
-  document.getElementById("mGrid").innerHTML = list.length? list.map(m=>{
+  shown=list;   // so the detail view can look a player up
+  document.getElementById("mGrid").innerHTML = list.length? list.map((m,idx)=>{
     const gap=Math.abs(m.u-myUTR);
     const fit = gap<=0.5 ? {t:"great match",c:"fit-great"}
               : gap<=1.0 ? {t:"good match", c:"fit-good"}
@@ -853,11 +901,11 @@ function renderMembers(){
               :            {t:"stretch match",c:"fit-stretch"};
     const key=market+m.n;
     return `<div class="card">
-      <div class="row-top">
+      <div class="row-top opener" data-open="${idx}" title="View profile">
         <div class="avatar">${esc(m.i)}</div>
         <div>
           <h3>${esc(m.n)}</h3>
-          <p class="sub">${esc(m.loc)} · ${m.d} mi away</p>
+          <p class="sub">${esc(m.loc)}${m.d?" · "+m.d+" mi away":""}</p>
         </div>
       </div>
       <div class="meta">
@@ -867,6 +915,7 @@ function renderMembers(){
         ${m.today?'<span class="tag free">free today</span>':""}
       </div>
       <p class="sub">${esc(m.pref)} · ${esc(m.avail)}</p>
+      <button class="linkbtn readmore" data-open="${idx}">Read bio</button>
       <div class="foot">
         <button class="act ${sent[key]?"done":""}" data-invite="${esc(key)}"
           ${m.id?`data-uid="${esc(m.id)}"`:""} ${sent[key]?"disabled":""}>
@@ -1162,6 +1211,7 @@ function fillProfileForm(){
   f.neighborhood.value = me.neighborhood || "";
   f.area.value         = me.area         || "NYC";
   f.court_access.value = me.court_access || "public";
+  f.bio.value          = me.bio          || "";
   f.play_prefs.value   = me.play_prefs   || "";
   f.availability.value = me.availability || "";
   f.free_today.checked = !!me.free_today;
@@ -1202,6 +1252,7 @@ $("profileForm").onsubmit=async e=>{
     neighborhood: f.neighborhood.value.trim()||null,
     area:         f.area.value,
     court_access: f.court_access.value,
+    bio:          f.bio.value.trim()||null,
     play_prefs:   f.play_prefs.value.trim()||null,
     availability: f.availability.value.trim()||null,
     free_today:   f.free_today.checked
@@ -1230,6 +1281,7 @@ async function refreshMembers(){
       u:p.utr!=null?Number(p.utr):4.0,
       loc:p.neighborhood||({NYC:"New York City",LI:"Long Island",HAM:"The Hamptons"}[p.area]||""),
       d:0,
+      bio:p.bio||null,
       pref:p.play_prefs||"No preferences set yet",
       avail:p.availability||"Availability not set",
       today:!!p.free_today,
@@ -1266,7 +1318,43 @@ document.getElementById("mSearch").oninput=renderMembers;
 document.getElementById("cSearch").oninput=renderCoaches;
 document.getElementById("tSearch").oninput=renderCourts;
 
+/* ---- member detail ---- */
+function openMember(idx){
+  const m=shown[idx]; if(!m) return;
+  const gap=Math.abs(m.u-myUTR);
+  const fit = gap<=0.5?"great match":gap<=1.0?"good match":gap<=1.5?"fair match":"stretch match";
+  const c=COURT[m.court]||COURT.public;
+  const key=market+m.n;
+  const status=m.sample?"sample profile"
+    :(m.verified==="checked"?"rating checked by our team"
+     :m.verified==="pending"?"rating pending review":"self-rated");
+  $("mmBody").innerHTML=
+    '<div class="mm-head"><div class="avatar">'+esc(m.i)+'</div>'
+    +'<div><h3 id="mmName">'+esc(m.n)+'</h3>'
+    +'<p class="sub">'+esc(m.loc)+(m.d?' &middot; '+m.d+' mi away':'')+'</p></div></div>'
+    +'<div class="meta"><span class="tag rate">UTR '+m.u.toFixed(1)+'</span>'
+    +'<span class="tag">'+fit+'</span>'
+    +'<span class="tag '+c.cls+'">'+c.label+'</span>'
+    +(m.today?'<span class="tag free">free today</span>':'')+'</div>'
+    +'<p class="mm-bio">'+esc(m.bio||"This player hasn't written a bio yet.")+'</p>'
+    +'<div class="mm-rows">'
+    +'<div><span>Looking for</span><span>'+esc(m.pref)+'</span></div>'
+    +'<div><span>Usually free</span><span>'+esc(m.avail)+'</span></div>'
+    +'<div><span>Court access</span><span>'+c.short+'</span></div>'
+    +'<div><span>Rating</span><span>'+status+'</span></div>'
+    +'</div>'
+    +'<button class="act wide'+(sent[key]?" done":"")+'" data-invite="'+esc(key)+'"'
+    +(m.id?' data-uid="'+esc(m.id)+'"':'')+(sent[key]?' disabled':'')+'>'
+    +(sent[key]?"Request sent":"Ask for a hit")+'</button>';
+  $("memberModal").classList.remove("hidden");
+}
+function closeMember(){ $("memberModal").classList.add("hidden"); }
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeMember(); });
+
 document.addEventListener("click",e=>{
+  const opener=e.target.closest("[data-open]");
+  if(opener){ openMember(Number(opener.dataset.open)); return; }
+  if(e.target.closest("[data-close]")){ closeMember(); return; }
   const b=e.target.closest("button");
   if(!b) return;
   if(b.dataset.mfilter){
@@ -1285,9 +1373,10 @@ document.addEventListener("click",e=>{
   if(b.dataset.tfilter){ tPublic=!tPublic; b.classList.toggle("on",tPublic); renderCourts(); }
   if(b.dataset.invite){
     // Browsing is open, but you need an account to contact someone or save a court.
-    if(LIVE && !me) return showPage("login");
+    if(LIVE && !me){ closeMember(); return showPage("login"); }
     sent[b.dataset.invite]=true;
     if(b.dataset.uid) sendHitRequest(b.dataset.uid);
+    closeMember();
     renderAll();
   }
 });
