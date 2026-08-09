@@ -124,6 +124,9 @@
   .tag.fit-good{background:#E6EFDA;border-color:#BFD3A5;color:#42603A;}
   .tag.fit-fair{background:#F3EFE0;border-color:#DAD0B0;color:#6E6440;}
   .tag.fit-stretch{background:#F6EADF;border-color:#DEBFA3;color:#7A5334;}
+  .tag.sport-tennis{background:#E3EFDC;border-color:#B6CFA4;color:#33562A;}
+  .tag.sport-padel{background:#E0E9F2;border-color:#AFC5DA;color:#2E4C6B;}
+  .tag.sport-pickle{background:#F6E9DA;border-color:#DFC49E;color:#7A5320;}
   .tag.court-yes{background:#DDEBD2;border-color:#A9C68F;color:#33562A;}
   .tag.court-club{background:#E3E9F0;border-color:#B4C4D6;color:#33506E;}
   .tag.court-no{background:#F2EFE4;border-color:#D6CFB6;color:#6B6450;}
@@ -335,7 +338,7 @@
       </svg>
       <span>
         <div class="name">HITMEUP</div>
-        <div class="tag">find a hit · find a coach · find a court</div>
+        <div class="tag">tennis · padel · pickleball</div>
       </span>
     </a>
     <nav class="tabs">
@@ -353,6 +356,14 @@
 
 <div class="ctx">
   <div class="wrap row">
+    <label>Sport
+      <select id="sport">
+        <option value="all">All sports</option>
+        <option value="tennis">Tennis</option>
+        <option value="padel">Padel</option>
+        <option value="pickleball">Pickleball</option>
+      </select>
+    </label>
     <label>Area
       <select id="market">
         <option value="NYC">New York City</option>
@@ -509,6 +520,15 @@
                 <option value="public">I&rsquo;m looking for a court</option>
                 <option value="club">I&rsquo;m a club member</option>
                 <option value="private">I have my own court</option>
+              </select>
+            </label>
+
+            <label class="fld">
+              <span>Main sport</span>
+              <select name="sport">
+                <option value="tennis">Tennis</option>
+                <option value="padel">Padel</option>
+                <option value="pickleball">Pickleball</option>
               </select>
             </label>
 
@@ -703,7 +723,7 @@
 
 </main>
 
-<div id="memberModal" class="modal hidden">
+<div id="memberModal" class="modal" style="display:none">
   <div class="modal-back" data-close="1"></div>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="mmName">
     <button class="modal-x" data-close="1" aria-label="Close">&times;</button>
@@ -735,135 +755,140 @@ let liveMembers = null;  // real members pulled from the database
 
 const MEMBERS = {
   NYC:[
-    {n:"Marcus Webb",i:"MW",u:5.2,loc:"Upper West Side",d:0.6,pref:"Baseline rallies, no scoring",avail:"Weekday mornings",today:true,court:"public",bio:"Grew up playing in Riverside Park and never really stopped. Happy to warm up slowly and hit for an hour without keeping score."},
-    {n:"Priya Raman",i:"PR",u:4.8,loc:"Chelsea",d:1.1,pref:"Sets, competitive",avail:"Evenings after 6",today:true,court:"public",bio:"Played number two singles in college and still gets competitive about it. Prefers full sets and will absolutely chase down a drop shot."},
-    {n:"Danny Ortiz",i:"DO",u:5.1,loc:"Astoria",d:2.4,pref:"Drills then a set",avail:"Weekends",today:false,court:"club",bio:"Weekend player who likes to drill cross-court for twenty minutes before playing points. Reliable, punctual, brings extra balls."},
-    {n:"Alice Chen",i:"AC",u:6.4,loc:"Brooklyn Heights",d:3.2,pref:"Hard hitting, singles",avail:"Sat & Sun AM",today:false,court:"public",bio:"Big forehand, flat and heavy. Looking for someone who can handle pace and wants a proper workout rather than a social hit."},
-    {n:"Tom Feeney",i:"TF",u:3.9,loc:"Hell's Kitchen",d:0.9,pref:"Casual, still learning",avail:"Flexible",today:true,court:"public",bio:"Six months into tennis and loving it. Still learning where to stand on serve, so patience appreciated. Beers after are non-negotiable."},
-    {n:"Sonia Alvarez",i:"SA",u:5,loc:"Harlem",d:2.8,pref:"Doubles, looking for a 4th",avail:"Weekday evenings",today:false,court:"club",bio:"Doubles specialist looking for a regular fourth. Good hands at net, terrible overhead, working on it."},
-    {n:"Ben Whitfield",i:"BW",u:7.6,loc:"Financial District",d:4.1,pref:"Match play only",avail:"Early mornings",today:false,court:"public",bio:"Plays USTA leagues and treats every match like it counts. Early mornings only, on court by 6:30, done by 8."},
-    {n:"Nina Kowalski",i:"NK",u:4.9,loc:"Williamsburg",d:3.6,pref:"Rally + serve practice",avail:"Weekends",today:true,court:"private",bio:"Came back to tennis after a decade off. Rebuilding my serve from scratch and enjoying every minute of it."},
-    {n:"Ellie Fournier",i:"EF",u:1.4,loc:"Murray Hill",d:1.3,pref:"Total beginner, first racquet",avail:"Weekend mornings",today:true,court:"public",bio:"Bought a racquet last month and have hit exactly twice. Looking for someone kind who will feed me balls and not laugh."},
-    {n:"Omar Haddad",i:"OH",u:2.1,loc:"Inwood",d:5.2,pref:"Learning to rally, very patient needed",avail:"Weeknights",today:false,court:"club",bio:"Learning the game properly for the first time at 34. Can rally maybe six shots before something goes wrong. Working on it."},
-    {n:"Grace Whitmore",i:"GW",u:2.6,loc:"Park Slope",d:3.9,pref:"Beginner drills, no scoring yet",avail:"Sat AM",today:true,court:"public",bio:"Beginner who has taken a few group clinics. Would rather do drills than play points until my rally is more reliable."},
-    {n:"Luis Fernández",i:"LF",u:3.2,loc:"Sunnyside",d:2.6,pref:"Improver, working on consistency",avail:"Flexible",today:false,court:"public",bio:"Getting more consistent every month. My backhand is a work in progress but my forehand is finally landing in."},
-    {n:"Kiara Blackwood",i:"KB",u:3.7,loc:"Bushwick",d:4.3,pref:"Casual sets, still learning",avail:"Weekends",today:true,court:"club",bio:"Play casual sets with friends and want to get better. Not fussed about winning, just want longer rallies."},
-    {n:"Peter Mihailov",i:"PM",u:4.3,loc:"Tribeca",d:2,pref:"Steady baseline, no big serves",avail:"Weekday lunch",today:false,court:"public",bio:"Steady baseline player, no huge weapons. Lunchtime hits near the office suit me best. Reliable and low drama."},
-    {n:"Rachel Osei",i:"RO",u:4.6,loc:"Crown Heights",d:4.7,pref:"Doubles or singles, easygoing",avail:"Sun afternoons",today:true,court:"public",bio:"Easygoing player happy with singles or doubles. Good rally partner, decent volleys, terrible at keeping score."},
-    {n:"Julian Reyes",i:"JU",u:5.5,loc:"East Village",d:1.6,pref:"Fast-paced rallies, tiebreaks",avail:"Weeknights",today:false,court:"club",bio:"Quick around the court and like a fast-paced hit. Tiebreaks are my favourite way to finish a session."},
-    {n:"Amara Nkemelu",i:"AN",u:5.9,loc:"Long Island City",d:3.1,pref:"Singles, competitive but friendly",avail:"Early mornings",today:true,court:"public",bio:"Competitive but friendly. I hit hard, I run everything down, and I will not sulk if you beat me."},
-    {n:"Simon Bright",i:"SB",u:6.2,loc:"Battery Park City",d:3.8,pref:"Match play, USTA 4.0 level",avail:"Weekends",today:false,court:"private",bio:"Solid 4.0 league player. Comfortable at net, working on my second serve, always up for a match."},
-    {n:"Hana Yoshida",i:"HY",u:6.7,loc:"Greenpoint",d:4,pref:"Serve & volley practice",avail:"Weekday evenings",today:true,court:"club",bio:"Serve and volley by instinct, which does not always go well. Looking for someone to practise returns against."},
-    {n:"Dmitri Volkov",i:"DV",u:7.1,loc:"Riverdale",d:6.9,pref:"Hard hitting, best of 3",avail:"Sat mornings",today:false,court:"public",bio:"Heavy topspin, long rallies, best of three. If you want a physical match that goes two hours, I am your guy."},
-    {n:"Chloe Bertrand",i:"CB",u:8,loc:"Forest Hills",d:7.4,pref:"Former college player, match play",avail:"Weekday mornings",today:true,court:"public",bio:"Played Division I and still hit most mornings. Happy to play with anyone who can keep a rally going at pace."},
-    {n:"Ibrahim Sallah",i:"IS",u:8.6,loc:"Jackson Heights",d:5.6,pref:"High intensity, tournament prep",avail:"Early AM only",today:false,court:"club",bio:"Training for tournaments so my sessions are structured: drills, serves, then sets. Early mornings only."},
-    {n:"Whitney Gale",i:"WG",u:9,loc:"Upper East Side",d:2.3,pref:"Open level, looking for a regular",avail:"Flexible",today:true,court:"private",bio:"Open level player looking for a regular partner rather than one-off hits. Consistency matters more to me than level."}
+    {n:"Marcus Webb",i:"MW",u:5.2,loc:"Upper West Side",d:0.6,pref:"Baseline rallies, no scoring",avail:"Weekday mornings",today:true,court:"public",bio:"Grew up playing in Riverside Park and never really stopped. Happy to warm up slowly and hit for an hour without keeping score.",sport:"tennis"},
+    {n:"Priya Raman",i:"PR",u:4.8,loc:"Chelsea",d:1.1,pref:"Sets, competitive",avail:"Evenings after 6",today:true,court:"public",bio:"Came to padel from squash and never looked back. Love the walls, love the chaos. Always need a fourth.",sport:"padel"},
+    {n:"Danny Ortiz",i:"DO",u:5.1,loc:"Astoria",d:2.4,pref:"Drills then a set",avail:"Weekends",today:false,court:"club",bio:"Weekend player who likes to drill cross-court for twenty minutes before playing points. Reliable, punctual, brings extra balls.",sport:"tennis"},
+    {n:"Alice Chen",i:"AC",u:6.4,loc:"Brooklyn Heights",d:3.2,pref:"Hard hitting, singles",avail:"Sat & Sun AM",today:false,court:"public",bio:"Big forehand, flat and heavy. Looking for someone who can handle pace and wants a proper workout rather than a social hit.",sport:"tennis"},
+    {n:"Tom Feeney",i:"TF",u:3.9,loc:"Hell's Kitchen",d:0.9,pref:"Casual, still learning",avail:"Flexible",today:true,court:"public",bio:"Picked up pickleball this year and now play more than I ever played tennis. Very social, very addictive.",sport:"pickleball"},
+    {n:"Sonia Alvarez",i:"SA",u:5,loc:"Harlem",d:2.8,pref:"Doubles, looking for a 4th",avail:"Weekday evenings",today:false,court:"club",bio:"Pickleball doubles most evenings. Good dinks, questionable third shot drop.",sport:"pickleball"},
+    {n:"Ben Whitfield",i:"BW",u:7.6,loc:"Financial District",d:4.1,pref:"Match play only",avail:"Early mornings",today:false,court:"public",bio:"Plays USTA leagues and treats every match like it counts. Early mornings only, on court by 6:30, done by 8.",sport:"tennis"},
+    {n:"Nina Kowalski",i:"NK",u:4.9,loc:"Williamsburg",d:3.6,pref:"Rally + serve practice",avail:"Weekends",today:true,court:"private",bio:"Came back to tennis after a decade off. Rebuilding my serve from scratch and enjoying every minute of it.",sport:"tennis"},
+    {n:"Ellie Fournier",i:"EF",u:1.4,loc:"Murray Hill",d:1.3,pref:"Total beginner, first racquet",avail:"Weekend mornings",today:true,court:"public",bio:"Bought a racquet last month and have hit exactly twice. Looking for someone kind who will feed me balls and not laugh.",sport:"tennis"},
+    {n:"Omar Haddad",i:"OH",u:2.1,loc:"Inwood",d:5.2,pref:"Learning to rally, very patient needed",avail:"Weeknights",today:false,court:"club",bio:"Learning the game properly for the first time at 34. Can rally maybe six shots before something goes wrong. Working on it.",sport:"tennis"},
+    {n:"Grace Whitmore",i:"GW",u:2.6,loc:"Park Slope",d:3.9,pref:"Beginner drills, no scoring yet",avail:"Sat AM",today:true,court:"public",bio:"New to pickleball and loving how quickly you can actually rally. Looking for other beginners.",sport:"pickleball"},
+    {n:"Luis Fernández",i:"LF",u:3.2,loc:"Sunnyside",d:2.6,pref:"Improver, working on consistency",avail:"Flexible",today:false,court:"public",bio:"Getting more consistent every month. My backhand is a work in progress but my forehand is finally landing in.",sport:"tennis"},
+    {n:"Kiara Blackwood",i:"KB",u:3.7,loc:"Bushwick",d:4.3,pref:"Casual sets, still learning",avail:"Weekends",today:true,court:"club",bio:"Play casual sets with friends and want to get better. Not fussed about winning, just want longer rallies.",sport:"tennis"},
+    {n:"Peter Mihailov",i:"PM",u:4.3,loc:"Tribeca",d:2,pref:"Steady baseline, no big serves",avail:"Weekday lunch",today:false,court:"public",bio:"Steady baseline player, no huge weapons. Lunchtime hits near the office suit me best. Reliable and low drama.",sport:"tennis"},
+    {n:"Rachel Osei",i:"RO",u:4.6,loc:"Crown Heights",d:4.7,pref:"Doubles or singles, easygoing",avail:"Sun afternoons",today:true,court:"public",bio:"Play pickleball with a regular group and always happy to bring someone new in.",sport:"pickleball"},
+    {n:"Julian Reyes",i:"JU",u:5.5,loc:"East Village",d:1.6,pref:"Fast-paced rallies, tiebreaks",avail:"Weeknights",today:false,court:"club",bio:"Padel three times a week now. Faster points, more laughs, and nobody serves at your head.",sport:"padel"},
+    {n:"Amara Nkemelu",i:"AN",u:5.9,loc:"Long Island City",d:3.1,pref:"Singles, competitive but friendly",avail:"Early mornings",today:true,court:"public",bio:"Competitive but friendly. I hit hard, I run everything down, and I will not sulk if you beat me.",sport:"tennis"},
+    {n:"Simon Bright",i:"SB",u:6.2,loc:"Battery Park City",d:3.8,pref:"Match play, USTA 4.0 level",avail:"Weekends",today:false,court:"private",bio:"Solid 4.0 league player. Comfortable at net, working on my second serve, always up for a match.",sport:"tennis"},
+    {n:"Hana Yoshida",i:"HY",u:6.7,loc:"Greenpoint",d:4,pref:"Serve & volley practice",avail:"Weekday evenings",today:true,court:"club",bio:"Switched from tennis doubles to padel last year. Working on my bandeja, badly.",sport:"padel"},
+    {n:"Dmitri Volkov",i:"DV",u:7.1,loc:"Riverdale",d:6.9,pref:"Hard hitting, best of 3",avail:"Sat mornings",today:false,court:"public",bio:"Heavy topspin, long rallies, best of three. If you want a physical match that goes two hours, I am your guy.",sport:"tennis"},
+    {n:"Chloe Bertrand",i:"CB",u:8,loc:"Forest Hills",d:7.4,pref:"Former college player, match play",avail:"Weekday mornings",today:true,court:"public",bio:"Played Division I and still hit most mornings. Happy to play with anyone who can keep a rally going at pace.",sport:"tennis"},
+    {n:"Ibrahim Sallah",i:"IS",u:8.6,loc:"Jackson Heights",d:5.6,pref:"High intensity, tournament prep",avail:"Early AM only",today:false,court:"club",bio:"Training for tournaments so my sessions are structured: drills, serves, then sets. Early mornings only.",sport:"tennis"},
+    {n:"Whitney Gale",i:"WG",u:9,loc:"Upper East Side",d:2.3,pref:"Open level, looking for a regular",avail:"Flexible",today:true,court:"private",bio:"Open level player looking for a regular partner rather than one-off hits. Consistency matters more to me than level.",sport:"tennis"}
   ],
   LI:[
-    {n:"Greg Santoro",i:"GS",u:5.3,loc:"Garden City",d:1.4,pref:"Singles, best of 3",avail:"Weekday evenings",today:true,court:"club",bio:"Singles player who likes best of three and a proper warm-up. Been playing at the same club for fifteen years."},
-    {n:"Marie Delaney",i:"MD",u:4.7,loc:"Huntington",d:2.2,pref:"Social doubles",avail:"Weekday mornings",today:false,court:"public",bio:"Social doubles most weeks. I am there for the tennis and the coffee afterwards in roughly equal measure."},
-    {n:"Rob Klein",i:"RK",u:5,loc:"Port Washington",d:3,pref:"Drills, high intensity",avail:"Sat AM",today:true,court:"club",bio:"High intensity drilling is my thing. Twenty minutes of cross-court, twenty of down the line, then points."},
-    {n:"Ana Lucia Reis",i:"AR",u:6.1,loc:"Great Neck",d:2.7,pref:"Match play, USTA 4.0",avail:"Sun afternoons",today:false,court:"private",bio:"USTA 4.0 and play league matches most weekends. Looking for practice partners between matches."},
-    {n:"Ted Nakamura",i:"TN",u:4.2,loc:"Rockville Centre",d:4.4,pref:"Improver, patient partner",avail:"Flexible",today:true,court:"public",bio:"Improver who is finally hitting through the ball. Flexible schedule, just looking for someone patient."},
-    {n:"Hannah Boyle",i:"HB",u:5.4,loc:"Oceanside",d:5.1,pref:"Baseline rallies",avail:"Weeknights",today:false,court:"club",bio:"Baseline rallies are my happy place. Not a big server, but I will keep the ball in play all day."},
-    {n:"Denise Corrigan",i:"DC",u:1.8,loc:"Levittown",d:6.2,pref:"Just started, learning grips",avail:"Weekday mornings",today:true,court:"public",bio:"Started lessons this spring. Can serve underarm reliably and overarm occasionally. Very much a beginner."},
-    {n:"Sam Petrosyan",i:"SP",u:2.4,loc:"Massapequa",d:7.1,pref:"Beginner, wants a hitting buddy",avail:"Weekends",today:false,court:"private",bio:"New to tennis and looking for a regular hitting buddy at the same stage. Weekends work best."},
-    {n:"Farrah Idris",i:"FI",u:3,loc:"Syosset",d:3.3,pref:"Improver, mini-tennis and rallies",avail:"Sat AM",today:true,court:"club",bio:"A few months in and improving fast. Happy doing mini-tennis to warm up and building from there."},
-    {n:"Michael Dunne",i:"MI",u:3.6,loc:"Bethpage",d:4.9,pref:"Social hit, no pressure",avail:"Sun mornings",today:false,court:"public",bio:"Play once a week for the exercise. No pressure, no scoring, just a decent hit and a chat."},
-    {n:"Lena Brackmann",i:"LB",u:4.4,loc:"Manhasset",d:2.5,pref:"Consistent rallies, some doubles",avail:"Weekday evenings",today:true,court:"club",bio:"Consistent rallies, occasional doubles. I am not going to hit winners but I will get everything back."},
-    {n:"Curtis Nyland",i:"CN",u:5.8,loc:"Smithtown",d:8.3,pref:"Competitive singles",avail:"Weeknights",today:false,court:"private",bio:"Competitive singles player. Weeknights suit me, and I am happy to travel a bit for a good match."},
-    {n:"Priscilla Achebe",i:"PA",u:6.5,loc:"Northport",d:6.6,pref:"Match play, USTA league",avail:"Weekends",today:true,court:"public",bio:"League player who takes it seriously without being unbearable about it. Looking for match practice."},
-    {n:"Aaron Feldstein",i:"AF",u:7.3,loc:"Dix Hills",d:7.8,pref:"Drills then sets, high pace",avail:"Early mornings",today:false,court:"club",bio:"Drills then sets, high pace throughout. Early mornings before work are when I play best."},
-    {n:"Yuki Tanabe",i:"YT",u:8.4,loc:"Melville",d:6,pref:"Former D1, tournament prep",avail:"Sat & Sun AM",today:true,court:"private",bio:"Former D1 player now prepping for tournaments. Happy to hit with anyone who can sustain a rally at pace."}
+    {n:"Greg Santoro",i:"GS",u:5.3,loc:"Garden City",d:1.4,pref:"Singles, best of 3",avail:"Weekday evenings",today:true,court:"club",bio:"Singles player who likes best of three and a proper warm-up. Been playing at the same club for fifteen years.",sport:"tennis"},
+    {n:"Marie Delaney",i:"MD",u:4.7,loc:"Huntington",d:2.2,pref:"Social doubles",avail:"Weekday mornings",today:false,court:"public",bio:"Pickleball is my sport now. Social games, decent level, lots of laughing.",sport:"pickleball"},
+    {n:"Rob Klein",i:"RK",u:5,loc:"Port Washington",d:3,pref:"Drills, high intensity",avail:"Sat AM",today:true,court:"club",bio:"High intensity drilling is my thing. Twenty minutes of cross-court, twenty of down the line, then points.",sport:"tennis"},
+    {n:"Ana Lucia Reis",i:"AR",u:6.1,loc:"Great Neck",d:2.7,pref:"Match play, USTA 4.0",avail:"Sun afternoons",today:false,court:"private",bio:"Padel convert. Play mixed doubles most weekends and take it just seriously enough.",sport:"padel"},
+    {n:"Ted Nakamura",i:"TN",u:4.2,loc:"Rockville Centre",d:4.4,pref:"Improver, patient partner",avail:"Flexible",today:true,court:"public",bio:"Pickleball three mornings a week. Friendly games, no ego, everyone welcome.",sport:"pickleball"},
+    {n:"Hannah Boyle",i:"HB",u:5.4,loc:"Oceanside",d:5.1,pref:"Baseline rallies",avail:"Weeknights",today:false,court:"club",bio:"Baseline rallies are my happy place. Not a big server, but I will keep the ball in play all day.",sport:"tennis"},
+    {n:"Denise Corrigan",i:"DC",u:1.8,loc:"Levittown",d:6.2,pref:"Just started, learning grips",avail:"Weekday mornings",today:true,court:"public",bio:"Complete pickleball beginner. Bought a paddle, watched some videos, need actual humans to play with.",sport:"pickleball"},
+    {n:"Sam Petrosyan",i:"SP",u:2.4,loc:"Massapequa",d:7.1,pref:"Beginner, wants a hitting buddy",avail:"Weekends",today:false,court:"private",bio:"New to tennis and looking for a regular hitting buddy at the same stage. Weekends work best.",sport:"tennis"},
+    {n:"Farrah Idris",i:"FI",u:3,loc:"Syosset",d:3.3,pref:"Improver, mini-tennis and rallies",avail:"Sat AM",today:true,court:"club",bio:"A few months in and improving fast. Happy doing mini-tennis to warm up and building from there.",sport:"tennis"},
+    {n:"Michael Dunne",i:"MI",u:3.6,loc:"Bethpage",d:4.9,pref:"Social hit, no pressure",avail:"Sun mornings",today:false,court:"public",bio:"Play once a week for the exercise. No pressure, no scoring, just a decent hit and a chat.",sport:"tennis"},
+    {n:"Lena Brackmann",i:"LB",u:4.4,loc:"Manhasset",d:2.5,pref:"Consistent rallies, some doubles",avail:"Weekday evenings",today:true,court:"club",bio:"Started padel with friends and got hooked. Still learning the glass but rallies are already fun.",sport:"padel"},
+    {n:"Curtis Nyland",i:"CN",u:5.8,loc:"Smithtown",d:8.3,pref:"Competitive singles",avail:"Weeknights",today:false,court:"private",bio:"Competitive singles player. Weeknights suit me, and I am happy to travel a bit for a good match.",sport:"tennis"},
+    {n:"Priscilla Achebe",i:"PA",u:6.5,loc:"Northport",d:6.6,pref:"Match play, USTA league",avail:"Weekends",today:true,court:"public",bio:"League player who takes it seriously without being unbearable about it. Looking for match practice.",sport:"tennis"},
+    {n:"Aaron Feldstein",i:"AF",u:7.3,loc:"Dix Hills",d:7.8,pref:"Drills then sets, high pace",avail:"Early mornings",today:false,court:"club",bio:"Drills then sets, high pace throughout. Early mornings before work are when I play best.",sport:"tennis"},
+    {n:"Yuki Tanabe",i:"YT",u:8.4,loc:"Melville",d:6,pref:"Former D1, tournament prep",avail:"Sat & Sun AM",today:true,court:"private",bio:"Former D1 player now prepping for tournaments. Happy to hit with anyone who can sustain a rally at pace.",sport:"tennis"}
   ],
   HAM:[
-    {n:"Charles Ellery",i:"CE",u:5.1,loc:"East Hampton",d:1.2,pref:"Mornings before the heat",avail:"Summer weekdays",today:true,court:"private",bio:"Out here most of the summer and like to be on court before the heat. Steady game, good company."},
-    {n:"Vanessa Cole",i:"VC",u:4.9,loc:"Sag Harbor",d:2.6,pref:"Doubles at a private court",avail:"Weekends",today:true,court:"private",bio:"Play doubles on a private court most weekends and often need a fourth. Relaxed, social tennis."},
-    {n:"Jonah Reyes",i:"JR",u:6.8,loc:"Bridgehampton",d:3.4,pref:"Competitive singles",avail:"Early AM",today:false,court:"club",bio:"Competitive singles player. Early mornings, hard hitting, and I will want to play a full match."},
-    {n:"Pippa Lindqvist",i:"PL",u:5.2,loc:"Southampton",d:4,pref:"Rally, then a light set",avail:"Weekday afternoons",today:false,court:"private",bio:"Rally for a while, then a light set. Afternoons suit me. More interested in a good hit than a result."},
-    {n:"Owen Marsh",i:"OM",u:4.4,loc:"Amagansett",d:5.5,pref:"Casual hit, guest of a member",avail:"Aug only",today:true,court:"public",bio:"Here in August only, playing as a guest of a member. Casual hit is all I am after."},
-    {n:"Bitsy Kellerman",i:"BK",u:1.2,loc:"Water Mill",d:3.8,pref:"Complete beginner, private court",avail:"Weekday mornings",today:true,court:"private",bio:"Complete beginner with a court at the house and no one to use it with. Would love someone patient."},
-    {n:"Rafael Duarte",i:"RD",u:2.8,loc:"Hampton Bays",d:9.4,pref:"Learning, happy to feed and rally",avail:"Weekends",today:false,court:"club",bio:"Learning the game and happy to feed balls or rally at whatever pace suits. Weekends are best."},
-    {n:"Margot Sinclair",i:"MS",u:3.4,loc:"Wainscott",d:2.9,pref:"Improver, social doubles",avail:"Summer weekdays",today:true,court:"private",bio:"Improver who mostly plays social doubles. Looking to get more court time in over the summer."},
-    {n:"Nikhil Varma",i:"NV",u:4.1,loc:"Quogue",d:11.2,pref:"Steady rallies, mornings",avail:"Weekends",today:false,court:"public",bio:"Steady rallies, mornings preferred. Not competitive, just enjoy being on court a few times a week."},
-    {n:"Serena Bloomfield",i:"SB",u:5.7,loc:"Sagaponack",d:4.6,pref:"Doubles at my own court",avail:"Weekday afternoons",today:true,court:"private",bio:"Have a court at home and play doubles most weekday afternoons. Always looking for another pair."},
-    {n:"Gustav Lindholm",i:"GL",u:6.3,loc:"Shelter Island",d:12.5,pref:"Singles, ferry-friendly times",avail:"Sun mornings",today:false,court:"private",bio:"On Shelter Island so ferry timings matter. Singles player, decent level, flexible on Sundays."},
-    {n:"Theo Marchetti",i:"TM",u:7.9,loc:"Springs",d:2.2,pref:"Match play, fast pace",avail:"Early AM",today:true,court:"club",bio:"Fast-paced match play, early mornings. I will push you and expect the same back."},
-    {n:"Delphine Aubert",i:"DA2",u:8.8,loc:"Montauk",d:10.1,pref:"Open level, tournament regular",avail:"Aug weekends",today:false,court:"private",bio:"Open level and play tournaments through the summer. Looking for hitting partners who can keep up."}
+    {n:"Charles Ellery",i:"CE",u:5.1,loc:"East Hampton",d:1.2,pref:"Mornings before the heat",avail:"Summer weekdays",today:true,court:"private",bio:"Out here most of the summer and like to be on court before the heat. Steady game, good company.",sport:"tennis"},
+    {n:"Vanessa Cole",i:"VC",u:4.9,loc:"Sag Harbor",d:2.6,pref:"Doubles at a private court",avail:"Weekends",today:true,court:"private",bio:"Padel at the club most weekends. Social, competitive, usually followed by lunch.",sport:"padel"},
+    {n:"Jonah Reyes",i:"JR",u:6.8,loc:"Bridgehampton",d:3.4,pref:"Competitive singles",avail:"Early AM",today:false,court:"club",bio:"Competitive singles player. Early mornings, hard hitting, and I will want to play a full match.",sport:"tennis"},
+    {n:"Pippa Lindqvist",i:"PL",u:5.2,loc:"Southampton",d:4,pref:"Rally, then a light set",avail:"Weekday afternoons",today:false,court:"private",bio:"Rally for a while, then a light set. Afternoons suit me. More interested in a good hit than a result.",sport:"tennis"},
+    {n:"Owen Marsh",i:"OM",u:4.4,loc:"Amagansett",d:5.5,pref:"Casual hit, guest of a member",avail:"Aug only",today:true,court:"public",bio:"Out here for August and playing pickleball most days. Casual games only.",sport:"pickleball"},
+    {n:"Bitsy Kellerman",i:"BK",u:1.2,loc:"Water Mill",d:3.8,pref:"Complete beginner, private court",avail:"Weekday mornings",today:true,court:"private",bio:"Complete beginner with a court at the house and no one to use it with. Would love someone patient.",sport:"tennis"},
+    {n:"Rafael Duarte",i:"RD",u:2.8,loc:"Hampton Bays",d:9.4,pref:"Learning, happy to feed and rally",avail:"Weekends",today:false,court:"club",bio:"Learning the game and happy to feed balls or rally at whatever pace suits. Weekends are best.",sport:"tennis"},
+    {n:"Margot Sinclair",i:"MS",u:3.4,loc:"Wainscott",d:2.9,pref:"Improver, social doubles",avail:"Summer weekdays",today:true,court:"private",bio:"Pickleball doubles in the mornings. Improving slowly, enjoying it enormously.",sport:"pickleball"},
+    {n:"Nikhil Varma",i:"NV",u:4.1,loc:"Quogue",d:11.2,pref:"Steady rallies, mornings",avail:"Weekends",today:false,court:"public",bio:"Steady rallies, mornings preferred. Not competitive, just enjoy being on court a few times a week.",sport:"tennis"},
+    {n:"Serena Bloomfield",i:"SB",u:5.7,loc:"Sagaponack",d:4.6,pref:"Doubles at my own court",avail:"Weekday afternoons",today:true,court:"private",bio:"Have a court at home and play doubles most weekday afternoons. Always looking for another pair.",sport:"tennis"},
+    {n:"Gustav Lindholm",i:"GL",u:6.3,loc:"Shelter Island",d:12.5,pref:"Singles, ferry-friendly times",avail:"Sun mornings",today:false,court:"private",bio:"Played padel in Sweden for years before moving here. Happy to teach the basics to anyone curious.",sport:"padel"},
+    {n:"Theo Marchetti",i:"TM",u:7.9,loc:"Springs",d:2.2,pref:"Match play, fast pace",avail:"Early AM",today:true,court:"club",bio:"Fast-paced match play, early mornings. I will push you and expect the same back.",sport:"tennis"},
+    {n:"Delphine Aubert",i:"DA2",u:8.8,loc:"Montauk",d:10.1,pref:"Open level, tournament regular",avail:"Aug weekends",today:false,court:"private",bio:"Open level and play tournaments through the summer. Looking for hitting partners who can keep up.",sport:"tennis"}
   ]
 };
 
 const COACHES = {
   NYC:[
-    {n:"Cecil Lingard",i:"CL",rate:170,where:"club",loc:"Central Park Tennis Center",spec:"Head pro · all levels, clay & hard",src:"rate: centralparktenniscenter.com"},
-    {n:"Mariano Argote",i:"MA",rate:180,where:"club",loc:"Central Park Tennis Center",spec:"Master pro · advanced / match prep",src:"rate: centralparktenniscenter.com"},
-    {n:"Julie Razafindranaly",i:"JR",rate:60,where:"club",loc:"Cary Leeds Center, Bronx",spec:"Juniors & beginners · first lesson free",src:"rate: nyjtl.org"},
-    {n:"Valentin Lang",i:"VL",rate:50,where:"club",loc:"Yorkville Tennis Club, UES",spec:"Indoor clay, all levels",src:"rate: via TeachMe.To"},
-    {n:"Victor Barrere",i:"VB",rate:60,where:"home",loc:"Brooklyn-wide",spec:"Independent pro · travels to your court",src:"rate: findtennislessons.com"},
-    {n:"David Cerne",i:"DC",rate:108,where:"home",loc:"Manhattan-wide",spec:"Independent pro · comes to you",src:"rate: TeachMe.To Manhattan avg"}
+    {n:"Cecil Lingard",i:"CL",rate:170,where:"club",loc:"Central Park Tennis Center",spec:"Head pro · all levels, clay & hard",src:"rate: centralparktenniscenter.com",sport:"tennis"},
+    {n:"Mariano Argote",i:"MA",rate:180,where:"club",loc:"Central Park Tennis Center",spec:"Master pro · advanced / match prep",src:"rate: centralparktenniscenter.com",sport:"tennis"},
+    {n:"Julie Razafindranaly",i:"JR",rate:60,where:"club",loc:"Cary Leeds Center, Bronx",spec:"Pickleball · first lesson free",src:"rate: nyjtl.org",sport:"pickleball"},
+    {n:"Valentin Lang",i:"VL",rate:90,where:"club",loc:"Padel Haus, Brooklyn",spec:"Padel · known around the courts as the Vala Lord",src:"padel specialist",sport:"padel"},
+    {n:"Victor Barrere",i:"VB",rate:60,where:"home",loc:"Brooklyn-wide",spec:"Independent pro · travels to your court",src:"rate: findtennislessons.com",sport:"tennis"},
+    {n:"David Cerne",i:"DC",rate:108,where:"home",loc:"Manhattan-wide",spec:"Independent pro · comes to you",src:"rate: TeachMe.To Manhattan avg",sport:"tennis"},
+    {n:"Wyatt Anderson",i:"WA",rate:65,where:"home",loc:"All five boroughs",spec:"Pickleball · beginners to 4.0, comes to your court",src:"pickleball specialist",sport:"pickleball"}
   ],
   LI:[
-    {n:"Tim Andersson",i:"TA",rate:213,where:"club",loc:"SPORTIME Port Washington",spec:"Academy-level · McEnroe program",src:"rate: via TeachMe.To"},
-    {n:"Cecil Lingard",i:"CL",rate:null,where:"club",loc:"Glen Cove & Glen Head",spec:"Leagues & junior development",src:"venue: rwtt.com"},
-    {n:"Mariano Argote",i:"MA",rate:null,where:"club",loc:"Bethpage Park, Farmingdale",spec:"Junior high performance",src:"venue: LI Tennis Magazine"},
-    {n:"Julie Razafindranaly",i:"JR",rate:null,where:"club",loc:"Huntington",spec:"Academy coaching & camps",src:"venue: longislandtennis.org"},
-    {n:"Valentin Lang",i:"VL",rate:55,where:"home",loc:"Nassau & Suffolk",spec:"Independent pro · comes to you",src:"rate: marketplace avg"}
+    {n:"Tim Andersson",i:"TA",rate:213,where:"club",loc:"SPORTIME Port Washington",spec:"Academy-level · McEnroe program",src:"rate: via TeachMe.To",sport:"tennis"},
+    {n:"Cecil Lingard",i:"CL",rate:null,where:"club",loc:"Glen Cove & Glen Head",spec:"Leagues & junior development",src:"venue: rwtt.com",sport:"tennis"},
+    {n:"Mariano Argote",i:"MA",rate:null,where:"club",loc:"Bethpage Park, Farmingdale",spec:"Junior high performance",src:"venue: LI Tennis Magazine",sport:"tennis"},
+    {n:"Julie Razafindranaly",i:"JR",rate:null,where:"club",loc:"Huntington",spec:"Pickleball · Academy coaching & camps",src:"venue: longislandtennis.org",sport:"pickleball"},
+    {n:"Valentin Lang",i:"VL",rate:85,where:"home",loc:"Nassau & Suffolk",spec:"Padel · the Vala Lord, travels to your club",src:"padel specialist",sport:"padel"},
+    {n:"Wyatt Anderson",i:"WA",rate:60,where:"club",loc:"Nassau & Suffolk",spec:"Pickleball · clinics and doubles strategy",src:"pickleball specialist",sport:"pickleball"}
   ],
   HAM:[
-    {n:"Victor Barrere",i:"VB",rate:150,where:"home",loc:"Hamptons-wide",spec:"Private lessons at your own court",src:"rate: tenniswithdennis.com"},
-    {n:"David Cerne",i:"DC",rate:115,where:"club",loc:"Hamptons-wide",spec:"Indoor · 10-lesson packs at $110/hr",src:"rate: cunninghamtennis.com"},
-    {n:"Tim Andersson",i:"TA",rate:140,where:"home",loc:"Westhampton / East Hampton",spec:"Independent pro",src:"rate: superprof.com"},
-    {n:"Cecil Lingard",i:"CL",rate:null,where:"home",loc:"Montauk to Westhampton",spec:"Concierge · 45+ yrs coaching",src:"model: myhamptonspro.com"},
-    {n:"Mariano Argote",i:"MA",rate:null,where:"home",loc:"Hamptons-wide",spec:"ATP/WTA & D1 background",src:"model: theroyaltennis.com"},
-    {n:"Julie Razafindranaly",i:"JR",rate:null,where:"home",loc:"Hamptons-wide",spec:"USPTA-certified · in-home",src:"model: hamptonstennisconcierge.com"},
-    {n:"Valentin Lang",i:"VL",rate:null,where:"club",loc:"Montauk",spec:"8 clay courts, open to the public",src:"venue: gothamtennismtk.com"}
+    {n:"Victor Barrere",i:"VB",rate:150,where:"home",loc:"Hamptons-wide",spec:"Private lessons at your own court",src:"rate: tenniswithdennis.com",sport:"tennis"},
+    {n:"David Cerne",i:"DC",rate:115,where:"club",loc:"Hamptons-wide",spec:"Indoor · 10-lesson packs at $110/hr",src:"rate: cunninghamtennis.com",sport:"tennis"},
+    {n:"Tim Andersson",i:"TA",rate:140,where:"home",loc:"Westhampton / East Hampton",spec:"Independent pro",src:"rate: superprof.com",sport:"tennis"},
+    {n:"Cecil Lingard",i:"CL",rate:null,where:"home",loc:"Montauk to Westhampton",spec:"Concierge · 45+ yrs coaching",src:"model: myhamptonspro.com",sport:"tennis"},
+    {n:"Mariano Argote",i:"MA",rate:null,where:"home",loc:"Hamptons-wide",spec:"ATP/WTA & D1 background",src:"model: theroyaltennis.com",sport:"tennis"},
+    {n:"Julie Razafindranaly",i:"JR",rate:null,where:"home",loc:"Hamptons-wide",spec:"Pickleball · in-home",src:"model: hamptonstennisconcierge.com",sport:"pickleball"},
+    {n:"Valentin Lang",i:"VL",rate:120,where:"club",loc:"East Hampton Indoor Tennis",spec:"Padel · the Vala Lord, 3 padel courts on site",src:"venue: ehindoortennis.com",sport:"padel"},
+    {n:"Wyatt Anderson",i:"WA",rate:90,where:"home",loc:"Hamptons-wide",spec:"Pickleball · private and small-group sessions",src:"pickleball specialist",sport:"pickleball"}
   ]
 };
 
 const COURTS = {
   NYC:[
-    {n:"NYC Parks public courts",i:"NP",price:0,unit:"with $100 season permit",type:"public",loc:"~90+ locations citywide",d:0.4,detail:"Season permit $100 adult, $20 senior, $10 junior. Single play $15.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
-    {n:"Central Park Tennis Center",i:"CP",price:15,unit:"per hour",type:"public",loc:"Central Park",d:1.2,detail:"30 courts (26 clay, 4 hard). Advance booking for permit holders.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/tennisreservation",cta:"Reserve a court"},
-    {n:"Prospect Park — night play",i:"PP",price:32,unit:"per hour Fri–Sun",type:"public",loc:"Brooklyn",d:3.4,detail:"No permit needed for 7–11pm. $40/hr Mon–Thu.",src:"prospectpark.org",url:"https://www.prospectpark.org/visit-the-park/places-to-go/tennis-center/",cta:"Book night play"},
-    {n:"East River Park",i:"ER",price:0,unit:"first come, first served",type:"public",loc:"Lower East Side",d:2.9,detail:"6 hard courts, no reservation system.",src:"nycgovparks.org",url:null,cta:null,note:"No booking — just turn up"},
-    {n:"Cary Leeds Center",i:"CL",price:0,unit:"honors NYC permits",type:"public",loc:"Crotona Park, Bronx",d:6.1,detail:"22 courts. 6,000+ free community court-hours a year.",src:"nyjtl.org",url:"https://www.nyjtl.org/caryleeds/",cta:"Book a court"},
-    {n:"USTA Billie Jean King NTC",i:"BJ",price:null,unit:"rate not published",type:"public",loc:"Flushing Meadows",d:8.2,detail:"Public rental via CourtReserve. Closed early Aug–late Sep for the US Open.",src:"ntc.usta.com",url:"https://www.ntc.usta.com/",cta:"Book a court"},
-    {n:"Sutton East Tennis Club",i:"SE",price:null,unit:"membership, not published",type:"club",loc:"Midtown East",d:1.8,detail:"8 indoor red clay courts. Seasonal, Sept–May.",src:"club listings",url:null,cta:null,note:"Call the club to book"},
-    {n:"Roosevelt Island Racquet Club",i:"RI",price:null,unit:"membership, not published",type:"club",loc:"Roosevelt Island",d:2.2,detail:"12 indoor courts.",src:"advantagetennisclubs.com",url:"https://www.advantagetennisclubs.com/",cta:"Club website"},
-    {n:"Crotona Park courts",i:"CR",price:0,unit:"with NYC permit",type:"public",loc:"Bronx",d:6.3,detail:"20 courts — one of the largest public clusters in the city.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
-    {n:"Juniper Valley Park",i:"JV",price:0,unit:"with NYC permit",type:"public",loc:"Middle Village, Queens",d:5.8,detail:"10 courts. Popular with local leagues.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
-    {n:"Marine Park",i:"MP",price:0,unit:"with NYC permit",type:"public",loc:"South Brooklyn",d:7.2,detail:"10+ courts.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
-    {n:"McCarren Park",i:"MC",price:0,unit:"with NYC permit (summer)",type:"public",loc:"Greenpoint, Brooklyn",d:4.2,detail:"6 of 7 courts on the permit system in summer; bubbled and privately run Oct–Apr.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
-    {n:"Astoria Park",i:"AP",price:0,unit:"with NYC permit",type:"public",loc:"Astoria, Queens",d:4.6,detail:"Public courts under the Hell Gate Bridge.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"},
-    {n:"St. Mary's Park",i:"SM",price:0,unit:"with NYC permit",type:"public",loc:"South Bronx",d:5.4,detail:"Public courts, permit system.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit"}
+    {n:"NYC Parks public courts",i:"NP",price:0,unit:"with $100 season permit",type:"public",loc:"~90+ locations citywide",d:0.4,detail:"Season permit $100 adult, $20 senior, $10 junior. Single play $15.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit",sports:["tennis"]},
+    {n:"Central Park Tennis Center",i:"CP",price:15,unit:"per hour",type:"public",loc:"Central Park",d:1.2,detail:"30 courts (26 clay, 4 hard). Advance booking for permit holders.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/tennisreservation",cta:"Reserve a court",sports:["tennis"]},
+    {n:"Prospect Park — night play",i:"PP",price:32,unit:"per hour Fri–Sun",type:"public",loc:"Brooklyn",d:3.4,detail:"No permit needed for 7–11pm. $40/hr Mon–Thu.",src:"prospectpark.org",url:"https://www.prospectpark.org/visit-the-park/places-to-go/tennis-center/",cta:"Book night play",sports:["tennis"]},
+    {n:"East River Park",i:"ER",price:0,unit:"first come, first served",type:"public",loc:"Lower East Side",d:2.9,detail:"6 hard courts, no reservation system.",src:"nycgovparks.org",url:null,cta:null,note:"No booking — just turn up",sports:["tennis"]},
+    {n:"Cary Leeds Center",i:"CL",price:0,unit:"honors NYC permits",type:"public",loc:"Crotona Park, Bronx",d:6.1,detail:"22 courts. 6,000+ free community court-hours a year.",src:"nyjtl.org",url:"https://www.nyjtl.org/caryleeds/",cta:"Book a court",sports:["tennis"]},
+    {n:"USTA Billie Jean King NTC",i:"BJ",price:null,unit:"rate not published",type:"public",loc:"Flushing Meadows",d:8.2,detail:"Public rental via CourtReserve. Closed early Aug–late Sep for the US Open.",src:"ntc.usta.com",url:"https://www.ntc.usta.com/",cta:"Book a court",sports:["tennis"]},
+    {n:"Sutton East Tennis Club",i:"SE",price:null,unit:"membership, not published",type:"club",loc:"Midtown East",d:1.8,detail:"8 indoor red clay courts. Seasonal, Sept–May.",src:"club listings",url:null,cta:null,note:"Call the club to book",sports:["tennis"]},
+    {n:"Roosevelt Island Racquet Club",i:"RI",price:null,unit:"membership, not published",type:"club",loc:"Roosevelt Island",d:2.2,detail:"12 indoor courts.",src:"advantagetennisclubs.com",url:"https://www.advantagetennisclubs.com/",cta:"Club website",sports:["tennis","pickleball"]},
+    {n:"Crotona Park courts",i:"CR",price:0,unit:"with NYC permit",type:"public",loc:"Bronx",d:6.3,detail:"20 courts — one of the largest public clusters in the city.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit",sports:["tennis"]},
+    {n:"Juniper Valley Park",i:"JV",price:0,unit:"with NYC permit",type:"public",loc:"Middle Village, Queens",d:5.8,detail:"10 courts. Popular with local leagues.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit",sports:["tennis"]},
+    {n:"Marine Park",i:"MP",price:0,unit:"with NYC permit",type:"public",loc:"South Brooklyn",d:7.2,detail:"10+ courts.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit",sports:["tennis"]},
+    {n:"McCarren Park",i:"MC",price:0,unit:"with NYC permit (summer)",type:"public",loc:"Greenpoint, Brooklyn",d:4.2,detail:"6 of 7 courts on the permit system in summer; bubbled and privately run Oct–Apr.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit",sports:["tennis","pickleball"]},
+    {n:"Astoria Park",i:"AP",price:0,unit:"with NYC permit",type:"public",loc:"Astoria, Queens",d:4.6,detail:"Public courts under the Hell Gate Bridge.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit",sports:["tennis"]},
+    {n:"Padel Haus",i:"PH",price:null,unit:"court rental, rate not published",type:"club",loc:"Williamsburg & Dumbo, Brooklyn",d:4.5,detail:"Dedicated padel club. Racquet hire available, bookings by session.",src:"padel club",url:null,cta:null,note:"Book via the club",sports:["padel"]},
+    {n:"Padel courts at 111 W 57th",i:"PC",price:null,unit:"residents only",type:"club",loc:"Midtown, Manhattan",d:2.1,detail:"Private residential padel court \u2014 building amenity, not open to the public.",src:"cityrealty.com",url:null,cta:null,note:"Residents only",sports:["padel"]},
+    {n:"St. Mary's Park",i:"SM",price:0,unit:"with NYC permit",type:"public",loc:"South Bronx",d:5.4,detail:"Public courts, permit system.",src:"nycgovparks.org",url:"https://www.nycgovparks.org/permits/tennis-permits",cta:"Get a permit",sports:["tennis"]}
   ],
   LI:[
-    {n:"Town of Huntington courts",i:"TH",price:0,unit:"town courts",type:"public",loc:"13 parks, Huntington",d:1.6,detail:"9 unlighted + 4 lighted park locations.",src:"huntingtonny.gov",url:"https://www.huntingtonny.gov/tennis-courts",cta:"See town courts"},
-    {n:"Great Neck Park District",i:"GN",price:null,unit:"resident / guest permit",type:"public",loc:"Great Neck",d:2.9,detail:"4 indoor + 29 outdoor courts.",src:"gnparksny.gov",url:"https://www.gnparksny.gov/",cta:"Permits & booking"},
-    {n:"Garden City Tennis Center — senior",i:"GC",price:32,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"Weekday mornings/early afternoon. 4 Har-Tru indoor courts.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court"},
-    {n:"Garden City Tennis Center — summer",i:"GC",price:36,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"June 1–Labor Day, 8am–10pm. Village residents only.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court"},
-    {n:"Garden City — winter peak",i:"GC",price:64,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"Evenings and weekend mornings in the fall/winter season.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court"},
-    {n:"Bethpage Park Tennis Center",i:"BP",price:null,unit:"no membership fee",type:"club",loc:"Farmingdale",d:4.8,detail:"4 indoor hard + 4 indoor red clay + outdoor Har-Tru.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the centre to book"},
-    {n:"Huntington Indoor Tennis",i:"HI",price:null,unit:"no membership fee",type:"club",loc:"Huntington Station",d:1.9,detail:"6 climate-controlled Har-Tru courts, next to the LIRR.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the club to book"},
-    {n:"Carefree Racquet Club",i:"CR",price:null,unit:"pay per program",type:"club",loc:"North Merrick",d:5.3,detail:"7 indoor courts + 4 pickleball. No membership fee.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the club to book"},
-    {n:"Eisenhower Park",i:"EP",price:null,unit:"county permit, fee not published",type:"public",loc:"East Meadow (Nassau)",d:3.7,detail:"16 lighted courts — the largest public cluster in Nassau. Leisure Pass discount for county residents.",src:"nassaucountyny.gov",url:"https://www.nassaucountyny.gov/1794/Park-Permits",cta:"Permit info"},
-    {n:"Town of Smithtown courts",i:"SM",price:null,unit:"town courts",type:"public",loc:"Smithtown (Suffolk)",d:9.1,detail:"Town tennis and pickleball courts with a published seasonal schedule.",src:"smithtownny.gov",url:null,cta:null,note:"Check the town schedule"},
-    {n:"Town of Islip courts",i:"IS",price:null,unit:"town courts",type:"public",loc:"Islip (Suffolk)",d:11.4,detail:"Town tennis and pickleball program courts.",src:"townofislip-ny.gov",url:null,cta:null,note:"Check the town schedule"},
-    {n:"Suffolk County court finder",i:"SC",price:0,unit:"directory of public courts",type:"public",loc:"Countywide, Suffolk",d:0,detail:"Searchable directory of public courts across Suffolk, run by the county tennis foundation.",src:"sctef.org",url:"https://www.sctef.org/tennis-court-search.html",cta:"Search courts"}
+    {n:"Town of Huntington courts",i:"TH",price:0,unit:"town courts",type:"public",loc:"13 parks, Huntington",d:1.6,detail:"9 unlighted + 4 lighted park locations.",src:"huntingtonny.gov",url:"https://www.huntingtonny.gov/tennis-courts",cta:"See town courts",sports:["tennis"]},
+    {n:"Great Neck Park District",i:"GN",price:null,unit:"resident / guest permit",type:"public",loc:"Great Neck",d:2.9,detail:"4 indoor + 29 outdoor courts.",src:"gnparksny.gov",url:"https://www.gnparksny.gov/",cta:"Permits & booking",sports:["tennis"]},
+    {n:"Garden City Tennis Center — senior",i:"GC",price:32,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"Weekday mornings/early afternoon. 4 Har-Tru indoor courts.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court",sports:["tennis"]},
+    {n:"Garden City Tennis Center — summer",i:"GC",price:36,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"June 1–Labor Day, 8am–10pm. Village residents only.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court",sports:["tennis"]},
+    {n:"Garden City — winter peak",i:"GC",price:64,unit:"per hour",type:"public",loc:"Garden City",d:2.1,detail:"Evenings and weekend mornings in the fall/winter season.",src:"gardencityrecreation.org",url:"https://www.gardencityrecreation.org/",cta:"Book a court",sports:["tennis"]},
+    {n:"Bethpage Park Tennis Center",i:"BP",price:null,unit:"no membership fee",type:"club",loc:"Farmingdale",d:4.8,detail:"4 indoor hard + 4 indoor red clay + outdoor Har-Tru.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the centre to book",sports:["tennis"]},
+    {n:"Huntington Indoor Tennis",i:"HI",price:null,unit:"no membership fee",type:"club",loc:"Huntington Station",d:1.9,detail:"6 climate-controlled Har-Tru courts, next to the LIRR.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the club to book",sports:["tennis"]},
+    {n:"Carefree Racquet Club",i:"CR",price:null,unit:"pay per program",type:"club",loc:"North Merrick",d:5.3,detail:"7 indoor courts + 4 pickleball. No membership fee.",src:"LI Tennis Magazine",url:null,cta:null,note:"Call the club to book",sports:["tennis","pickleball"]},
+    {n:"Eisenhower Park",i:"EP",price:null,unit:"county permit, fee not published",type:"public",loc:"East Meadow (Nassau)",d:3.7,detail:"16 lighted courts — the largest public cluster in Nassau. Leisure Pass discount for county residents.",src:"nassaucountyny.gov",url:"https://www.nassaucountyny.gov/1794/Park-Permits",cta:"Permit info",sports:["tennis"]},
+    {n:"Town of Smithtown courts",i:"SM",price:null,unit:"town courts",type:"public",loc:"Smithtown (Suffolk)",d:9.1,detail:"Town tennis and pickleball courts with a published seasonal schedule.",src:"smithtownny.gov",url:null,cta:null,note:"Check the town schedule",sports:["tennis","pickleball"]},
+    {n:"Town of Islip courts",i:"IS",price:null,unit:"town courts",type:"public",loc:"Islip (Suffolk)",d:11.4,detail:"Town tennis and pickleball program courts.",src:"townofislip-ny.gov",url:null,cta:null,note:"Check the town schedule",sports:["tennis","pickleball"]},
+    {n:"Suffolk County court finder",i:"SC",price:0,unit:"directory of public courts",type:"public",loc:"Countywide, Suffolk",d:0,detail:"Searchable directory of public courts across Suffolk, run by the county tennis foundation.",src:"sctef.org",url:"https://www.sctef.org/tennis-court-search.html",cta:"Search courts",sports:["tennis"]}
   ],
   HAM:[
-    {n:"Village of Southampton permit",i:"SV",price:25,unit:"per season",type:"public",loc:"Southampton Village",d:2.3,detail:"Residents only. +$10 per additional family member.",src:"southamptonvillage.gov",url:"https://www.southamptonvillage.gov/365/Tennis-Permit-Application",cta:"Apply for a permit"},
-    {n:"Town of East Hampton courts",i:"EH",price:null,unit:"permit, fee not published",type:"public",loc:"Springs, Amagansett, Montauk",d:1.7,detail:"Resident-permit gated. Call the town for current fees.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info"},
-    {n:"Westhampton Beach — non-member",i:"WB",price:70,unit:"per hour",type:"club",loc:"Westhampton Beach",d:8.4,detail:"Walk-on court rental, no membership required.",src:"whbtennis.com",url:"https://whbtennis.com/",cta:"Book a court"},
-    {n:"East Hampton Indoor Tennis",i:"EI",price:80,unit:"per hour (platform/pickleball)",type:"club",loc:"East Hampton",d:1.4,detail:"6 indoor + 18 outdoor + 3 padel. Open 365 days.",src:"ehindoortennis.com",url:"https://ehindoortennis.com/",cta:"Book a court"},
-    {n:"Westhampton Beach — summer single",i:"WB",price:1650,unit:"per season",type:"club",loc:"Westhampton Beach",d:8.4,detail:"7 days a week. Weekday-only tiers from $850.",src:"whbtennis.com",url:"https://whbtennis.com/pricing/",cta:"Join for the season"},
-    {n:"Buckskill Tennis Club",i:"BT",price:2700,unit:"per season",type:"club",loc:"East Hampton",d:1.9,detail:"Grass, Har-Tru, Laykold and red clay. Monthly from $960.",src:"buckskilltennis.com",url:"https://buckskilltennis.com/",cta:"Join for the season"},
-    {n:"SPORTIME Amagansett",i:"SA",price:3190,unit:"per season",type:"club",loc:"Amagansett",d:3.1,detail:"33 Har-Tru courts. Family $6,380. Guest $40–50/day.",src:"sportimeny.com",url:"https://www.sportimeny.com/amagansett/",cta:"Join for the season"},
-    {n:"Gotham Tennis Academy",i:"GT",price:null,unit:"rate not published",type:"club",loc:"Montauk",d:9.2,detail:"8 clay courts on a nature preserve, open to the public.",src:"gothamtennismtk.com",url:"https://gothamtennismtk.com/",cta:"Book a court"},
-    {n:"Montauk town courts",i:"MK",price:null,unit:"resident permit",type:"public",loc:"Montauk",d:9.8,detail:"2 courts, pickleball-lined. East Hampton Town permit required.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info"},
-    {n:"Abrahams Path Recreation Facility",i:"AB",price:null,unit:"resident permit",type:"public",loc:"Amagansett",d:3.4,detail:"Town public courts. East Hampton Town permit required.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info"},
-    {n:"Springs courts",i:"SG",price:null,unit:"resident permit",type:"public",loc:"Springs, East Hampton",d:2.1,detail:"3 courts at the Springs Youth Association building.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info"},
-    {n:"Suffolk County court finder",i:"SC",price:0,unit:"directory of public courts",type:"public",loc:"Countywide, Suffolk",d:0,detail:"Searchable directory of public courts across Suffolk, including the East End.",src:"sctef.org",url:"https://www.sctef.org/tennis-court-search.html",cta:"Search courts"}
+    {n:"Village of Southampton permit",i:"SV",price:25,unit:"per season",type:"public",loc:"Southampton Village",d:2.3,detail:"Residents only. +$10 per additional family member.",src:"southamptonvillage.gov",url:"https://www.southamptonvillage.gov/365/Tennis-Permit-Application",cta:"Apply for a permit",sports:["tennis"]},
+    {n:"Town of East Hampton courts",i:"EH",price:null,unit:"permit, fee not published",type:"public",loc:"Springs, Amagansett, Montauk",d:1.7,detail:"Resident-permit gated. Call the town for current fees.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info",sports:["tennis"]},
+    {n:"Westhampton Beach — non-member",i:"WB",price:70,unit:"per hour",type:"club",loc:"Westhampton Beach",d:8.4,detail:"Walk-on court rental, no membership required.",src:"whbtennis.com",url:"https://whbtennis.com/",cta:"Book a court",sports:["tennis","pickleball"]},
+    {n:"East Hampton Indoor Tennis",i:"EI",price:80,unit:"per hour (platform/pickleball)",type:"club",loc:"East Hampton",d:1.4,detail:"6 indoor + 18 outdoor + 3 padel. Open 365 days.",src:"ehindoortennis.com",url:"https://ehindoortennis.com/",cta:"Book a court",sports:["tennis","padel","pickleball"]},
+    {n:"Westhampton Beach — summer single",i:"WB",price:1650,unit:"per season",type:"club",loc:"Westhampton Beach",d:8.4,detail:"7 days a week. Weekday-only tiers from $850.",src:"whbtennis.com",url:"https://whbtennis.com/pricing/",cta:"Join for the season",sports:["tennis","pickleball"]},
+    {n:"Buckskill Tennis Club",i:"BT",price:2700,unit:"per season",type:"club",loc:"East Hampton",d:1.9,detail:"Grass, Har-Tru, Laykold and red clay. Monthly from $960.",src:"buckskilltennis.com",url:"https://buckskilltennis.com/",cta:"Join for the season",sports:["tennis"]},
+    {n:"SPORTIME Amagansett",i:"SA",price:3190,unit:"per season",type:"club",loc:"Amagansett",d:3.1,detail:"33 Har-Tru courts. Family $6,380. Guest $40–50/day.",src:"sportimeny.com",url:"https://www.sportimeny.com/amagansett/",cta:"Join for the season",sports:["tennis","pickleball"]},
+    {n:"Gotham Tennis Academy",i:"GT",price:null,unit:"rate not published",type:"club",loc:"Montauk",d:9.2,detail:"8 clay courts on a nature preserve, open to the public.",src:"gothamtennismtk.com",url:"https://gothamtennismtk.com/",cta:"Book a court",sports:["tennis"]},
+    {n:"Montauk town courts",i:"MK",price:null,unit:"resident permit",type:"public",loc:"Montauk",d:9.8,detail:"2 courts, pickleball-lined. East Hampton Town permit required.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info",sports:["tennis","pickleball"]},
+    {n:"Abrahams Path Recreation Facility",i:"AB",price:null,unit:"resident permit",type:"public",loc:"Amagansett",d:3.4,detail:"Town public courts. East Hampton Town permit required.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info",sports:["tennis"]},
+    {n:"Springs courts",i:"SG",price:null,unit:"resident permit",type:"public",loc:"Springs, East Hampton",d:2.1,detail:"3 courts at the Springs Youth Association building.",src:"ehamptonny.gov",url:"https://www.ehamptonny.gov/767/Tennis-Information",cta:"Permit info",sports:["tennis"]},
+    {n:"Suffolk County court finder",i:"SC",price:0,unit:"directory of public courts",type:"public",loc:"Countywide, Suffolk",d:0,detail:"Searchable directory of public courts across Suffolk, including the East End.",src:"sctef.org",url:"https://www.sctef.org/tennis-court-search.html",cta:"Search courts",sports:["tennis"]}
   ]
 };
 
@@ -875,6 +900,9 @@ const COURT={
 
 let market="NYC", myUTR=5.0;
 let shown=[];   // the member list currently on screen
+let sport="all";
+const SPORT={tennis:{label:"tennis",cls:"sport-tennis"},padel:{label:"padel",cls:"sport-padel"},pickleball:{label:"pickleball",cls:"sport-pickle"}};
+const inSport=v=>sport==="all"||(Array.isArray(v)?v.includes(sport):v===sport);
 let mFilter="all", cFilter="all", cSort=false, tSort="price", tPublic=false;
 const sent={};
 
@@ -886,8 +914,7 @@ function renderMembers(){
   // Real signed-up players first, then the sample profiles.
   const real = liveMembers ? liveMembers.filter(m=>m.area===market) : [];
   const source = real.concat(MEMBERS[market].map(m=>({...m,sample:true})));
-  let list=source.filter(m=>
-    (m.n+" "+m.loc).toLowerCase().includes(q));
+  let list=source.filter(m=>inSport(m.sport)&&(m.n+" "+m.loc).toLowerCase().includes(q));
   if(mFilter==="near") list=list.filter(m=>Math.abs(m.u-myUTR)<=0.5);
   if(mFilter==="today") list=list.filter(m=>m.today);
   if(mFilter==="court") list=list.filter(m=>m.court!=="public");
@@ -910,6 +937,7 @@ function renderMembers(){
         </div>
       </div>
       <div class="meta">
+        <span class="tag ${SPORT[m.sport||"tennis"].cls}">${SPORT[m.sport||"tennis"].label}</span>
         <span class="tag rate">UTR ${m.u.toFixed(1)}</span>
         <span class="tag ${fit.c}">${fit.t}</span>
         <span class="tag ${COURT[m.court].cls}">${COURT[m.court].label}</span>
@@ -929,7 +957,7 @@ function renderMembers(){
 
 function renderCoaches(){
   const q=(document.getElementById("cSearch").value||"").toLowerCase();
-  let list=COACHES[market].filter(c=>(c.n+" "+c.loc+" "+c.spec).toLowerCase().includes(q));
+  let list=COACHES[market].filter(c=>inSport(c.sport)&&(c.n+" "+c.loc+" "+c.spec).toLowerCase().includes(q));
   if(cFilter!=="all") list=list.filter(c=>c.where===cFilter);
   if(cSort) list=[...list].sort((a,b)=>(a.rate??1e9)-(b.rate??1e9));
   document.getElementById("cCount").textContent=list.length+" coach"+(list.length===1?"":"es");
@@ -944,6 +972,7 @@ function renderCoaches(){
         </div>
       </div>
       <div class="meta">
+        <span class="tag ${SPORT[c.sport||"tennis"].cls}">${SPORT[c.sport||"tennis"].label}</span>
         <span class="tag ${c.rate?"rate":"warn"}">${c.rate?money(c.rate)+"/hr":"rate on request"}</span>
         <span class="tag">${c.where==="home"?"comes to you":"at a club"}</span>
       </div>
@@ -959,7 +988,7 @@ function renderCoaches(){
 
 function renderCourts(){
   const q=(document.getElementById("tSearch").value||"").toLowerCase();
-  let list=COURTS[market].filter(t=>(t.n+" "+t.loc+" "+t.detail).toLowerCase().includes(q));
+  let list=COURTS[market].filter(t=>inSport(t.sports)&&(t.n+" "+t.loc+" "+t.detail).toLowerCase().includes(q));
   if(tPublic) list=list.filter(t=>t.type==="public");
   list=[...list].sort((a,b)=> tSort==="dist" ? a.d-b.d : (a.price??1e9)-(b.price??1e9));
   document.getElementById("tCount").textContent=list.length+" option"+(list.length===1?"":"s");
@@ -976,6 +1005,7 @@ function renderCourts(){
       </div>
       <div class="price">${priceTxt} <small>${esc(t.unit)}</small></div>
       <div class="meta">
+        ${(t.sports||["tennis"]).map(sp=>`<span class="tag ${SPORT[sp].cls}">${SPORT[sp].label}</span>`).join("")}
         <span class="tag ${t.type==="public"?"free":""}">${t.type==="public"?"public":"club"}</span>
         ${t.price===0?'<span class="tag free">no court fee</span>':""}
         ${t.price==null?'<span class="tag warn">pricing not published</span>':""}
@@ -1212,6 +1242,7 @@ function fillProfileForm(){
   f.neighborhood.value = me.neighborhood || "";
   f.area.value         = me.area         || "NYC";
   f.court_access.value = me.court_access || "public";
+  f.sport.value        = me.sport        || "tennis";
   f.bio.value          = me.bio          || "";
   f.play_prefs.value   = me.play_prefs   || "";
   f.availability.value = me.availability || "";
@@ -1230,7 +1261,8 @@ function drawPreview(){
     +'<div class="row-top"><div class="avatar">'+esc(initials(name))+'</div>'
     +'<div><h3>'+esc(name)+'</h3><p class="sub">'
     +esc(f.neighborhood.value.trim()||"No neighborhood set")+'</p></div></div>'
-    +'<div class="meta"><span class="tag rate">UTR '+utr+'</span>'
+    +'<div class="meta"><span class="tag '+SPORT[f.sport.value].cls+'">'+SPORT[f.sport.value].label+'</span>'
+    +'<span class="tag rate">UTR '+utr+'</span>'
     +'<span class="tag '+c.cls+'">'+c.label+'</span>'
     +(f.free_today.checked?'<span class="tag free">free today</span>':'')+'</div>'
     +'<p class="sub">'+esc(f.play_prefs.value.trim()||"No preferences set yet")
@@ -1253,6 +1285,7 @@ $("profileForm").onsubmit=async e=>{
     neighborhood: f.neighborhood.value.trim()||null,
     area:         f.area.value,
     court_access: f.court_access.value,
+    sport:        f.sport.value,
     bio:          f.bio.value.trim()||null,
     play_prefs:   f.play_prefs.value.trim()||null,
     availability: f.availability.value.trim()||null,
@@ -1283,6 +1316,7 @@ async function refreshMembers(){
       loc:p.neighborhood||({NYC:"New York City",LI:"Long Island",HAM:"The Hamptons"}[p.area]||""),
       d:0,
       bio:p.bio||null,
+      sport:p.sport||"tennis",
       pref:p.play_prefs||"No preferences set yet",
       avail:p.availability||"Availability not set",
       today:!!p.free_today,
@@ -1314,14 +1348,19 @@ if(LIVE){
 }
 
 document.getElementById("market").onchange=e=>{market=e.target.value;renderAll();};
+document.getElementById("sport").onchange=e=>{sport=e.target.value;renderAll();};
 document.getElementById("mylevel").onchange=e=>{myUTR=parseFloat(e.target.value);renderMembers();};
 document.getElementById("mSearch").oninput=renderMembers;
 document.getElementById("cSearch").oninput=renderCoaches;
 document.getElementById("tSearch").oninput=renderCourts;
 
-/* ---- member detail ---- */
+/* ---- member detail ----
+   The modal is driven by an inline style rather than a class, so no stylesheet
+   rule, ordering change or cached CSS can leave it stuck open. It is only ever
+   shown at the end of openMember(), after the content is successfully built. */
 function openMember(idx){
-  const m=shown[idx]; if(!m) return;
+  const m=shown[idx];
+  if(!m){ closeMember(); return; }   // stale index — never show an empty panel
   const gap=Math.abs(m.u-myUTR);
   const fit = gap<=0.5?"great match":gap<=1.0?"good match":gap<=1.5?"fair match":"stretch match";
   const c=COURT[m.court]||COURT.public;
@@ -1333,7 +1372,8 @@ function openMember(idx){
     '<div class="mm-head"><div class="avatar">'+esc(m.i)+'</div>'
     +'<div><h3 id="mmName">'+esc(m.n)+'</h3>'
     +'<p class="sub">'+esc(m.loc)+(m.d?' &middot; '+m.d+' mi away':'')+'</p></div></div>'
-    +'<div class="meta"><span class="tag rate">UTR '+m.u.toFixed(1)+'</span>'
+    +'<div class="meta"><span class="tag '+SPORT[m.sport||"tennis"].cls+'">'+SPORT[m.sport||"tennis"].label+'</span>'
+    +'<span class="tag rate">UTR '+m.u.toFixed(1)+'</span>'
     +'<span class="tag">'+fit+'</span>'
     +'<span class="tag '+c.cls+'">'+c.label+'</span>'
     +(m.today?'<span class="tag free">free today</span>':'')+'</div>'
@@ -1347,10 +1387,25 @@ function openMember(idx){
     +'<button class="act wide'+(sent[key]?" done":"")+'" data-invite="'+esc(key)+'"'
     +(m.id?' data-uid="'+esc(m.id)+'"':'')+(sent[key]?' disabled':'')+'>'
     +(sent[key]?"Request sent":"Ask for a hit")+'</button>';
-  $("memberModal").classList.remove("hidden");
+  $("memberModal").style.display="flex";
 }
-function closeMember(){ $("memberModal").classList.add("hidden"); }
+
+function closeMember(){
+  const mm=$("memberModal");
+  mm.style.display="none";
+  mm.classList.add("hidden");   // belt and braces
+  $("mmBody").innerHTML="";     // never leave stale content behind
+}
+
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeMember(); });
+
+// Safety net: if the panel is ever visible with nothing in it, close it.
+setInterval(()=>{
+  const mm=$("memberModal");
+  if(mm && mm.style.display==="flex" && !$("mmBody").innerHTML.trim()) closeMember();
+},500);
+
+closeMember();   // guarantee a clean state on load
 
 document.addEventListener("click",e=>{
   const opener=e.target.closest("[data-open]");
