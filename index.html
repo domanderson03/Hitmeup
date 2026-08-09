@@ -441,6 +441,73 @@
     </div>
   </section>
 
+  <!-- ============ MY PROFILE ============ -->
+  <section id="page-profile" class="hidden">
+    <div class="auth-wrap">
+      <div class="auth-card">
+        <form id="profileForm" novalidate>
+          <h2>My profile</h2>
+          <p class="sub">This is what other players see on your member card. The more you fill in, the easier it is for someone to decide you&rsquo;re a good hit.</p>
+
+          <div class="fields">
+            <label class="fld">
+              <span>Display name</span>
+              <input type="text" name="full_name" placeholder="Jane Doe">
+            </label>
+
+            <label class="fld">
+              <span>Neighborhood</span>
+              <input type="text" name="neighborhood" placeholder="e.g. Upper West Side, Sag Harbor">
+              <span class="hint">Shown on your card so people know how far you are.</span>
+            </label>
+
+            <label class="fld">
+              <span>Where do you play?</span>
+              <select name="area">
+                <option value="NYC">New York City</option>
+                <option value="LI">Long Island</option>
+                <option value="HAM">The Hamptons</option>
+              </select>
+            </label>
+
+            <label class="fld">
+              <span>Court access</span>
+              <select name="court_access">
+                <option value="public">I&rsquo;m looking for a court</option>
+                <option value="club">I&rsquo;m a club member</option>
+                <option value="private">I have my own court</option>
+              </select>
+            </label>
+
+            <label class="fld">
+              <span>What kind of hit are you after?</span>
+              <input type="text" name="play_prefs" placeholder="e.g. Baseline rallies, no scoring">
+            </label>
+
+            <label class="fld">
+              <span>When are you usually free?</span>
+              <input type="text" name="availability" placeholder="e.g. Weekday mornings, weekends">
+            </label>
+
+            <label class="check">
+              <input type="checkbox" name="free_today">
+              <span>I&rsquo;m free to play today</span>
+            </label>
+          </div>
+
+          <button type="submit" class="act wide">Save profile</button>
+          <p class="formnote" id="profileMsg"></p>
+        </form>
+      </div>
+
+      <aside class="auth-side">
+        <h3>Your card right now</h3>
+        <div id="profilePreview"></div>
+        <p class="fineprint">Your rating is set on the Link rating page, not here.</p>
+      </aside>
+    </div>
+  </section>
+
   <!-- ============ LINK RATING ============ -->
   <section id="page-rating" class="hidden">
     <div class="auth-wrap">
@@ -877,8 +944,8 @@ function renderCourts(){
 
 function renderAll(){renderMembers();renderCoaches();renderCourts();}
 
-const PAGES=["login","signup","rating","members","coaches","courts"];
-const AUTHPAGES=["login","signup","rating"];
+const PAGES=["login","signup","rating","profile","members","coaches","courts"];
+const AUTHPAGES=["login","signup","rating","profile"];
 const $=id=>document.getElementById(id);
 
 function showPage(name){
@@ -1045,10 +1112,12 @@ async function loadMe(){
 function paintAuthState(){
   const box=$("authBtns");
   if(me){
-    box.innerHTML='<button class="chip" id="btnRating">Link rating</button>'
+    box.innerHTML='<button class="chip" id="btnProfile">My profile</button>'
+      +'<button class="chip" id="btnRating">Link rating</button>'
       +'<span class="pill-me"><span class="av">'+initials(me.full_name||me.username)+'</span>'
       +(me.username||"")+'</span>'
       +'<button class="chip" id="btnLogout">Log out</button>';
+    $("btnProfile").onclick=()=>{fillProfileForm();showPage("profile");};
     $("btnRating").onclick=()=>showPage("rating");
     $("btnLogout").onclick=async()=>{
       await db.auth.signOut(); me=null; liveMembers=null;
@@ -1056,6 +1125,69 @@ function paintAuthState(){
     };
   }
 }
+
+/* ---- my profile ---- */
+function fillProfileForm(){
+  if(!me) return;
+  const f=$("profileForm");
+  f.full_name.value    = me.full_name    || "";
+  f.neighborhood.value = me.neighborhood || "";
+  f.area.value         = me.area         || "NYC";
+  f.court_access.value = me.court_access || "public";
+  f.play_prefs.value   = me.play_prefs   || "";
+  f.availability.value = me.availability || "";
+  f.free_today.checked = !!me.free_today;
+  drawPreview();
+}
+
+function drawPreview(){
+  if(!me) return;
+  const f=$("profileForm");
+  const name=f.full_name.value.trim()||me.username;
+  const utr=me.utr!=null?Number(me.utr).toFixed(1):"—";
+  const c=COURT[f.court_access.value]||COURT.public;
+  $("profilePreview").innerHTML=
+    '<div class="card" style="background:var(--white)">'
+    +'<div class="row-top"><div class="avatar">'+esc(initials(name))+'</div>'
+    +'<div><h3>'+esc(name)+'</h3><p class="sub">'
+    +esc(f.neighborhood.value.trim()||"No neighborhood set")+'</p></div></div>'
+    +'<div class="meta"><span class="tag rate">UTR '+utr+'</span>'
+    +'<span class="tag '+c.cls+'">'+c.label+'</span>'
+    +(f.free_today.checked?'<span class="tag free">free today</span>':'')+'</div>'
+    +'<p class="sub">'+esc(f.play_prefs.value.trim()||"No preferences set yet")
+    +' &middot; '+esc(f.availability.value.trim()||"Availability not set")+'</p></div>';
+}
+
+$("profileForm").oninput=drawPreview;
+$("profileForm").onchange=drawPreview;
+
+$("profileForm").onsubmit=async e=>{
+  e.preventDefault();
+  const f=e.target, msg=$("profileMsg");
+  if(!LIVE||!me){
+    msg.className="formnote err";
+    msg.textContent="You need to be logged in to save a profile.";
+    return;
+  }
+  const fields={
+    full_name:    f.full_name.value.trim()||null,
+    neighborhood: f.neighborhood.value.trim()||null,
+    area:         f.area.value,
+    court_access: f.court_access.value,
+    play_prefs:   f.play_prefs.value.trim()||null,
+    availability: f.availability.value.trim()||null,
+    free_today:   f.free_today.checked
+  };
+  msg.className="formnote"; msg.textContent="Saving…";
+  const {error}=await db.from("profiles").update(fields).eq("id",me.id);
+  if(error){ msg.className="formnote err"; msg.textContent=error.message; return; }
+  Object.assign(me,fields);
+  market=me.area; $("market").value=market;
+  msg.className="formnote ok"; msg.textContent="Profile saved.";
+  paintAuthState();
+  await refreshMembers();
+  renderAll();
+};
 
 async function refreshMembers(){
   if(!LIVE) return;
