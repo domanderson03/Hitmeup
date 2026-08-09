@@ -68,10 +68,12 @@
     border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--ink);
   }
   .pill-me{
-    margin-left:auto;display:flex;align-items:center;gap:8px;
+    display:flex;align-items:center;gap:8px;
     background:var(--white);border:1px solid var(--line);border-radius:999px;
     padding:4px 12px 4px 4px;font-size:12px;color:var(--ink);
+    font-family:inherit;cursor:pointer;
   }
+  .pill-me:hover{border-color:var(--green);background:var(--cream-2);}
   .pill-me .av{
     width:26px;height:26px;border-radius:50%;background:var(--green);
     color:var(--white);display:grid;place-items:center;font-size:11px;font-weight:600;
@@ -338,7 +340,6 @@
         <option value="9.0">UTR 9 &mdash; open level</option>
       </select>
     </label>
-    <span class="pill-me"><span class="av">DA</span> Dominic A. · verified via UTR</span>
   </div>
 </div>
 
@@ -1112,10 +1113,10 @@ async function loadMe(){
 function paintAuthState(){
   const box=$("authBtns");
   if(me){
-    box.innerHTML='<button class="chip" id="btnProfile">My profile</button>'
-      +'<button class="chip" id="btnRating">Link rating</button>'
-      +'<span class="pill-me"><span class="av">'+initials(me.full_name||me.username)+'</span>'
-      +(me.username||"")+'</span>'
+    box.innerHTML='<button class="chip" id="btnRating">Link rating</button>'
+      +'<button class="pill-me" id="btnProfile" title="Edit your profile">'
+      +'<span class="av">'+initials(me.full_name||me.username)+'</span>'
+      +esc(me.full_name||me.username||"")+'</button>'
       +'<button class="chip" id="btnLogout">Log out</button>';
     $("btnProfile").onclick=()=>{fillProfileForm();showPage("profile");};
     $("btnRating").onclick=()=>showPage("rating");
