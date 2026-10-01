@@ -459,7 +459,7 @@
             </label>
             <label class="check">
               <input type="checkbox" name="terms">
-              <span>I agree to the terms and privacy policy.</span>
+              <span>I understand HitMeUp is an early prototype.</span>
             </label>
           </div>
 
@@ -480,7 +480,7 @@
           <li><strong>Coaches who come to you.</strong> Club pros and at-home coaches with public rates.</li>
         </ul>
         <p class="fineprint">You&rsquo;ll be asked to link your rating next &mdash; it&rsquo;s optional, and you can do it any time.</p>
-        <p class="fineprint">Prototype only &mdash; nothing you type here is sent anywhere or stored.</p>
+        <p class="fineprint">Early prototype &mdash; accounts are stored securely with our database provider (Supabase). Please use a password you don&rsquo;t use anywhere else.</p>
       </aside>
     </div>
   </section>
@@ -1085,7 +1085,7 @@ $("signupForm").onsubmit=async e=>{
   if(!f.username.value.trim()) return fail("Please pick a username.");
   if(!/^\S+@\S+\.\S+$/.test(f.email.value.trim())) return fail("Please enter a valid email address.");
   if(f.password.value.length<8) return fail("Password needs to be at least 8 characters.");
-  if(!f.terms.checked) return fail("Please accept the terms to continue.");
+  if(!f.terms.checked) return fail("Please tick the box to continue.");
   market=f.area.value; $("market").value=market;
 
   if(!LIVE){
